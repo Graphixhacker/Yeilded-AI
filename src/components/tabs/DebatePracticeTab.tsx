@@ -1,0 +1,349 @@
+import React, { useState } from 'react';
+import { ErrorAlert } from "../ErrorAlert";
+
+import { DelegateContext, User, DebateTurn } from '../../types';
+import { UN_COUNTRIES } from '../../data/unPresets';
+import { api } from '../../services/api';
+import {
+  Swords,
+  Send,
+  Sparkles,
+  Shield,
+  Award,
+  AlertCircle,
+  RotateCcw,
+  CheckCircle2,
+  Lock,
+  UserCheck
+} from 'lucide-react';
+
+interface DebatePracticeTabProps {
+  context: DelegateContext;
+  user: User | null;
+  onOpenAuth: () => void;
+  onOpenPricing: () => void;
+  onUpdateUser: (u: User) => void;
+}
+
+export const DebatePracticeTab: React.FC<DebatePracticeTabProps> = ({
+  context,
+  user,
+  onOpenAuth,
+  onOpenPricing,
+  onUpdateUser
+}) => {
+  // Opposing country choice
+  const [opposingCountry, setOpposingCountry] = useState(
+    context.country === 'United States of America' ? 'Russian Federation' : 'United States of America'
+  );
+
+  const [turns, setTurns] = useState<DebateTurn[]>([
+    {
+      speaker: 'opponent',
+      country: context.country === 'United States of America' ? 'Russian Federation' : 'United States of America',
+      content: `The delegation of ${context.country === 'United States of America' ? 'the Russian Federation' : 'the United States'} recognizes the presence of ${context.country}. However, we categorically reject any draft measures that infringe upon sovereign defensive posture. How does your delegation reconcile its proposed oversight committee with Article 2(7) of the United Nations Charter?`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+
+  const [inputSpeech, setInputSpeech] = useState('');
+  const [isSparring, setIsSparring] = useState(false);
+  const [currentScore, setCurrentScore] = useState({
+    persuasiveness: 8,
+    decorum: 9,
+    policyAdherence: 9
+  });
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isFree = !user || user.tier === 'free';
+  const isFreeLimitHit = isFree && (user?.generationsUsed || 0) >= 3;
+
+  const handleSendTurn = async () => {
+    if (!inputSpeech.trim()) return;
+
+    if (!user) {
+      onOpenAuth();
+      return;
+    }
+
+    if (isFreeLimitHit) {
+      onOpenPricing();
+      return;
+    }
+
+    const newTurn: DebateTurn = {
+      speaker: 'user',
+      country: context.country,
+      content: inputSpeech.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const updatedTurns = [...turns, newTurn];
+    setTurns(updatedTurns);
+    setInputSpeech('');
+    setIsSparring(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await api.generateAI('debate-spar', {
+        userCountry: context.country,
+        opponentCountry: opposingCountry,
+        committee: context.committee,
+        topic: context.topic,
+        language: context.language || 'English',
+        history: updatedTurns.map((t) => ({
+          speaker: t.speaker,
+          country: t.country,
+          content: t.content
+        })),
+        lastSpeech: newTurn.content
+      });
+
+      if (res.result) {
+        const opponentTurn: DebateTurn = {
+          speaker: 'opponent',
+          country: opposingCountry,
+          content: res.result.reply,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          critique: res.result.critique
+        };
+
+        setTurns([...updatedTurns, opponentTurn]);
+
+        if (res.result.scores) {
+          setCurrentScore(res.result.scores);
+        }
+      }
+
+      if (res.user) {
+        onUpdateUser(res.user);
+      }
+    } catch (err: any) {
+      if (err.isFreeTierLimit) {
+        onOpenPricing();
+      } else {
+        setErrorMsg(err.message || 'Sparring session failed. Please check network.');
+      }
+    } finally {
+      setIsSparring(false);
+    }
+  };
+
+  const handleResetDebate = () => {
+    setTurns([
+      {
+        speaker: 'opponent',
+        country: opposingCountry,
+        content: `The floor is now open for moderated debate. The Delegate of ${opposingCountry} welcomes interventions from ${context.country} on the current working paper.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+  };
+
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Banner */}
+      <div className="bg-white dark:bg-[#071326] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+        <div>
+          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm uppercase tracking-wider mb-1">
+            <Swords className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span>INTERACTIVE DIPLOMATIC SPARRING ARENA</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
+            Debate Practice Mode
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
+            Spar against rival sovereign bloc delegates, defend against sharp Points of Information, and receive real-time decorum & persuasiveness scoring.
+          </p>
+        </div>
+
+        {/* Opponent Selector */}
+        <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0b1b33] p-2 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">OPPONENT:</span>
+          <select
+            id="select-opponent-country"
+            value={opposingCountry}
+            onChange={(e) => {
+              setOpposingCountry(e.target.value);
+              handleResetDebate();
+            }}
+            className="text-sm font-bold text-[#0B1F3A] dark:text-[#D4AF37] bg-white dark:bg-[#071326] border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 min-h-[36px]"
+          >
+            {UN_COUNTRIES.filter((c) => c !== context.country).map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {errorMsg && <ErrorAlert message={errorMsg} />}
+
+      {/* Main Grid: Scoreboard & Debate Transcript */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Live Scorecard */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-white dark:bg-[#071326] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center justify-between">
+              <span>Dais Performance Scoring</span>
+              <Award className="w-4 h-4 text-[#D4AF37]" />
+            </h3>
+
+            <div className="space-y-3">
+              {/* Persuasiveness */}
+              <div>
+                <div className="flex justify-between text-sm font-semibold mb-1">
+                  <span className="text-slate-600 dark:text-slate-400">Rhetorical Persuasiveness</span>
+                  <span className="font-mono font-bold text-[#0B1F3A] dark:text-blue-400">{currentScore.persuasiveness}/10</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-[#0B1F3A] dark:bg-blue-500 h-full rounded-full transition-all"
+                    style={{ width: `${(currentScore.persuasiveness / 10) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Decorum */}
+              <div>
+                <div className="flex justify-between text-sm font-semibold mb-1">
+                  <span className="text-slate-600 dark:text-slate-400">Parliamentary Decorum</span>
+                  <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{currentScore.decorum}/10</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-emerald-600 dark:bg-emerald-500 h-full rounded-full transition-all"
+                    style={{ width: `${(currentScore.decorum / 10) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Policy Adherence */}
+              <div>
+                <div className="flex justify-between text-sm font-semibold mb-1">
+                  <span className="text-slate-600 dark:text-slate-400">Policy Fidelity ({context.country})</span>
+                  <span className="font-mono font-bold text-amber-700 dark:text-amber-400">{currentScore.policyAdherence}/10</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-amber-500 h-full rounded-full transition-all"
+                    style={{ width: `${(currentScore.policyAdherence / 10) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="font-bold text-slate-800 dark:text-slate-200 mb-1">Dais Rules of Engagement:</p>
+              <ul className="list-disc list-inside space-y-1 text-xs">
+                <li>Address the Chair or refer to oneself in the third person ("This delegate believes...").</li>
+                <li>Avoid personal attacks; focus on treaty citations, national sovereignty, and operational mechanisms.</li>
+              </ul>
+            </div>
+
+            <button
+              id="btn-reset-debate"
+              onClick={handleResetDebate}
+              className="w-full min-h-[44px] py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 transition-colors active:scale-98"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Debate Floor</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column: Debate Arena */}
+        <div className="lg:col-span-8 flex flex-col bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs h-[620px] overflow-hidden transition-colors">
+          {/* Header */}
+          <div className="p-4 bg-slate-50 dark:bg-[#0b1b33] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Moderated Caucus Floor</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">| {context.committee}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <span className="text-blue-700 dark:text-blue-400">{context.country}</span>
+              <span className="text-slate-400 dark:text-slate-500">vs</span>
+              <span className="text-rose-700 dark:text-rose-400">{opposingCountry}</span>
+            </div>
+          </div>
+
+          {/* Transcript Scroll Area */}
+          <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/40 dark:bg-[#050f1e]/40">
+            {turns.map((turn, idx) => (
+              <div
+                key={idx}
+                className={`flex flex-col ${turn.speaker === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                <div className="flex items-center gap-2 mb-1 text-xs text-slate-400 dark:text-slate-500">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                    {turn.speaker === 'user' ? `Delegation of ${context.country}` : `Delegation of ${opposingCountry}`}
+                  </span>
+                  <span>{turn.timestamp}</span>
+                </div>
+
+                <div
+                  className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-xs ${
+                    turn.speaker === 'user'
+                      ? 'bg-[#0B1F3A] dark:bg-[#0f2a4a] text-white rounded-tr-none'
+                      : 'bg-white dark:bg-[#0b1b33] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-tl-none'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{turn.content}</p>
+
+                  {turn.critique && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-700 text-xs text-amber-800 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/40 p-3 rounded-lg">
+                      <span className="font-bold block text-amber-900 dark:text-amber-200">Dais Parliamentarian Critique:</span>
+                      {turn.critique}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isSparring && (
+              <div className="flex flex-col items-start">
+                <div className="bg-white dark:bg-[#0b1b33] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 rounded-tl-none text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 shadow-xs">
+                  <div className="w-3.5 h-3.5 border-2 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Delegate of {opposingCountry} is formulating formal counter-speech...</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* User Speech Input Form */}
+          <div className="p-4 bg-white dark:bg-[#071326] border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-end gap-2">
+              <textarea
+                id="textarea-debate-turn"
+                rows={2}
+                value={inputSpeech}
+                onChange={(e) => setInputSpeech(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendTurn();
+                  }
+                }}
+                placeholder={`Deliver your intervention or pose a Point of Information as the Delegate of ${context.country}...`}
+                className="flex-1 p-3 text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 resize-none leading-relaxed"
+              />
+              <button
+                id="btn-send-debate-turn"
+                onClick={handleSendTurn}
+                disabled={!inputSpeech.trim() || isSparring}
+                className="p-3 min-h-[44px] min-w-[44px] flex items-center justify-center bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] rounded-xl shadow-md transition-all disabled:opacity-40 shrink-0 active:scale-98"
+                title="Send intervention"
+                aria-label="Send intervention"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-400 dark:text-slate-500">
+              <span>Press Enter to send speech • Shift+Enter for newline</span>
+              <span>AI evaluates decorum & rebuts in-character</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

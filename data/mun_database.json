@@ -1,0 +1,247 @@
+{
+  "users": {
+    "demo-delegate-1": {
+      "id": "demo-delegate-1",
+      "email": "delegate@modelun.org",
+      "name": "Ambassador Alex Chen",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 2,
+      "dailyGenerations": {
+        "date": "2026-09-10",
+        "count": 1
+      },
+      "createdAt": "2026-09-09T10:46:35.772Z"
+    },
+    "user_7ycjipx1788951470621": {
+      "id": "user_7ycjipx1788951470621",
+      "email": "abdulahad2010mine@gmail.com",
+      "name": "Ahad",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 1,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 1
+      },
+      "createdAt": "2026-09-09T10:57:50.621Z"
+    },
+    "user_4vf8jly1788951743239": {
+      "id": "user_4vf8jly1788951743239",
+      "email": "test_delegate@un.org",
+      "name": "Ambassador Test",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 0
+      },
+      "createdAt": "2026-09-09T11:02:23.239Z"
+    },
+    "user_vrp3fbg1788951827226": {
+      "id": "user_vrp3fbg1788951827226",
+      "email": "delegate2434@gmail.com",
+      "name": "Delegate 2434",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 0
+      },
+      "createdAt": "2026-09-09T11:03:47.227Z",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+    },
+    "user_ozxzfmb1788951829075": {
+      "id": "user_ozxzfmb1788951829075",
+      "email": "delegate7963@gmail.com",
+      "name": "Delegate 7963",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 0
+      },
+      "createdAt": "2026-09-09T11:03:49.075Z",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+    },
+    "user_qng7b7c1788951829561": {
+      "id": "user_qng7b7c1788951829561",
+      "email": "delegate9237@gmail.com",
+      "name": "Delegate 9237",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 0
+      },
+      "createdAt": "2026-09-09T11:03:49.561Z",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+    },
+    "user_o43g9yu1788951829962": {
+      "id": "user_o43g9yu1788951829962",
+      "email": "delegate2837@gmail.com",
+      "name": "Delegate 2837",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 0
+      },
+      "createdAt": "2026-09-09T11:03:49.962Z",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+    },
+    "user_by833xm1788953142546": {
+      "id": "user_by833xm1788953142546",
+      "email": "test_delegate_101@school.edu",
+      "name": "Ambassador Test",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-09",
+        "count": 0
+      },
+      "createdAt": "2026-09-09T11:25:42.546Z"
+    },
+    "user_rv6f5s41789039280941": {
+      "id": "user_rv6f5s41789039280941",
+      "email": "test_delegate@example.com",
+      "name": "Test Delegate",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-10",
+        "count": 0
+      },
+      "createdAt": "2026-09-10T11:21:20.941Z"
+    },
+    "user_qlygxv11789039300423": {
+      "id": "user_qlygxv11789039300423",
+      "email": "google_ambassador@gmail.com",
+      "name": "Ambassador Google",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 3,
+      "dailyGenerations": {
+        "date": "2026-09-10",
+        "count": 3
+      },
+      "createdAt": "2026-09-10T11:21:40.423Z",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+    },
+    "user_4q1vxk11789074762556": {
+      "id": "user_4q1vxk11789074762556",
+      "email": "test2@example.com",
+      "name": "Test User 2",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-10",
+        "count": 0
+      },
+      "createdAt": "2026-09-10T21:12:42.556Z"
+    },
+    "user_3trhpqi1789075240027": {
+      "id": "user_3trhpqi1789075240027",
+      "email": "test_signup@example.com",
+      "name": "Test User Signup",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-10",
+        "count": 0
+      },
+      "createdAt": "2026-09-10T21:20:40.027Z"
+    }
+  },
+  "passwords": {
+    "demo-delegate-1": "diplomat2025",
+    "user_7ycjipx1788951470621": "broskiyeildedabdulahad2010",
+    "user_4vf8jly1788951743239": "delegatepass",
+    "user_vrp3fbg1788951827226": "google_oauth_auth",
+    "user_ozxzfmb1788951829075": "google_oauth_auth",
+    "user_qng7b7c1788951829561": "google_oauth_auth",
+    "user_o43g9yu1788951829962": "google_oauth_auth",
+    "user_by833xm1788953142546": "password123",
+    "user_rv6f5s41789039280941": "password123",
+    "user_qlygxv11789039300423": "google_oauth_auth",
+    "user_4q1vxk11789074762556": "password123",
+    "user_3trhpqi1789075240027": "password123"
+  },
+  "tokens": {
+    "tok_demo_delegate_1": "demo-delegate-1",
+    "tok_yzi6bd2nfd1788950820283": "demo-delegate-1",
+    "tok_ecm8b30h7sr1788951266671": "demo-delegate-1",
+    "tok_bh80n996zgu1788951433625": "demo-delegate-1",
+    "tok_mo5zralcly1788951438734": "demo-delegate-1",
+    "tok_8id0qvkzuw1788951470621": "user_7ycjipx1788951470621",
+    "tok_cigowqi9om1788951743239": "user_4vf8jly1788951743239",
+    "tok_m3m9hbkluc1788951827227": "user_vrp3fbg1788951827226",
+    "tok_akgl7m1xaej1788951829075": "user_ozxzfmb1788951829075",
+    "tok_vbh6hvuqvu1788951829561": "user_qng7b7c1788951829561",
+    "tok_3znogyoscpm1788951829962": "user_o43g9yu1788951829962",
+    "tok_rs3acnew1d1788952023099": "demo-delegate-1",
+    "tok_071o9i5xtig71788953140327": "demo-delegate-1",
+    "tok_l8rw8tq2gqh1788953142546": "user_by833xm1788953142546",
+    "tok_ge4zkd1ifn1788953144565": "user_by833xm1788953142546",
+    "tok_h4ngnulxvvk1788956643230": "demo-delegate-1",
+    "tok_zlyo3t80l4b1789037981955": "demo-delegate-1",
+    "tok_17q4gr1ka6x1789039280941": "user_rv6f5s41789039280941",
+    "tok_ulyt702p2ug1789039288448": "user_rv6f5s41789039280941",
+    "tok_6x4pxqmmxbr1789039298112": "demo-delegate-1",
+    "tok_vdrkh4iohcr1789039300423": "user_qlygxv11789039300423",
+    "tok_u2rljkfqok81789074762556": "user_4q1vxk11789074762556",
+    "tok_yu2f2sx1zg1789074769328": "user_4q1vxk11789074762556",
+    "tok_8mxibat1t691789075240027": "user_3trhpqi1789075240027"
+  },
+  "positionPapers": [],
+  "speeches": [],
+  "resolutions": [],
+  "crisisNotes": [],
+  "usageLogs": [
+    {
+      "id": "log_zw3rnpf",
+      "userId": "user_7ycjipx1788951470621",
+      "feature": "position-paper",
+      "timestamp": 1788951799140,
+      "date": "2026-09-09"
+    },
+    {
+      "id": "log_239w5fa",
+      "userId": "demo-delegate-1",
+      "feature": "position-paper",
+      "timestamp": 1789038043757,
+      "date": "2026-09-10"
+    },
+    {
+      "id": "log_z88n53o",
+      "userId": "user_qlygxv11789039300423",
+      "feature": "position-paper",
+      "timestamp": 1789039320994,
+      "date": "2026-09-10"
+    },
+    {
+      "id": "log_d95ayfs",
+      "userId": "user_qlygxv11789039300423",
+      "feature": "position-paper",
+      "timestamp": 1789039332848,
+      "date": "2026-09-10"
+    },
+    {
+      "id": "log_py03a3h",
+      "userId": "user_qlygxv11789039300423",
+      "feature": "position-paper",
+      "timestamp": 1789039344903,
+      "date": "2026-09-10"
+    }
+  ]
+}

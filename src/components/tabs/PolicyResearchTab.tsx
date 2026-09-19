@@ -1,0 +1,351 @@
+import React, { useState } from 'react';
+import { ErrorAlert } from "../ErrorAlert";
+
+import { DelegateContext, User, CountryDossier } from '../../types';
+import { api } from '../../services/api';
+import { exportDocumentToPDF, copyToClipboard } from '../../utils/exportUtils';
+import {
+  Globe,
+  Sparkles,
+  Download,
+  Copy,
+  Check,
+  AlertTriangle,
+  Shield,
+  FileText,
+  Scale,
+  Award,
+  Lock
+} from 'lucide-react';
+
+interface PolicyResearchTabProps {
+  context: DelegateContext;
+  user: User | null;
+  onOpenAuth: () => void;
+  onOpenPricing: () => void;
+  onUpdateUser: (u: User) => void;
+}
+
+export const PolicyResearchTab: React.FC<PolicyResearchTabProps> = ({
+  context,
+  user,
+  onOpenAuth,
+  onOpenPricing,
+  onUpdateUser
+}) => {
+  const [dossier, setDossier] = useState<CountryDossier | null>({
+    country: context.country,
+    topic: context.topic,
+    executiveSummary: `${context.country} maintains a high-priority strategic posture on this agenda item, balancing regional defense obligations with bilateral trade corridors. The delegation advocates for transparent multilateral mechanisms while firmly guarding domestic sovereign prerogatives.`,
+    alliancesAndBloc: [
+      'Regional Multilateral Security Group',
+      'United Nations Strategic Partnership Council',
+      'Global South & Cross-Regional Consensus Forum'
+    ],
+    keyTreaties: [
+      'Charter of the United Nations (Arts. 2, 51)',
+      'Geneva Conventions of 1949 and Additional Protocols',
+      'International Covenant on Civil and Political Rights (ICCPR)',
+      'Universal Declaration of Human Rights'
+    ],
+    nationalInterests: [
+      'Preservation of sovereign decision-making without extraterritorial oversight',
+      'Securing maritime and digital logistics choke points',
+      'Facilitating direct technology and capacity transfers to developing partners'
+    ],
+    redLines: [
+      'No unilateral sanctions without explicit Chapter VII Security Council authorization',
+      'Opposition to binding moratoriums lacking universal verification protocols'
+    ],
+    negotiatingLeverage: [
+      'Key multilateral negotiator with strong diplomatic influence over undecided delegations',
+      'Critical supplier of energy and raw mineral logistics in regional trade',
+      'Host to major UN regional logistical operations'
+    ],
+    historicalPrecedents: [
+      'Co-sponsored General Assembly Resolution on peaceful settlement of disputes (2021)',
+      'Consistently abstained on divisive draft amendments lacking consensus'
+    ],
+    recommendedStrategy:
+      'Form an early working group with neutral delegations. Champion an opt-in compliance fund before moving to the operative clauses of the draft resolution.',
+    generatedAt: new Date().toLocaleDateString()
+  });
+
+  const [isResearching, setIsResearching] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleResearch = async () => {
+    if (!user) {
+      onOpenAuth();
+      return;
+    }
+
+    setIsResearching(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await api.generateAI('country-research', {
+        country: context.country,
+        topic: context.topic,
+        language: context.language || 'English'
+      });
+
+      if (res.result) {
+        setDossier({
+          country: context.country,
+          topic: context.topic,
+          ...res.result,
+          generatedAt: new Date().toLocaleDateString()
+        });
+      }
+      if (res.user) {
+        onUpdateUser(res.user);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to conduct policy research.');
+    } finally {
+      setIsResearching(false);
+    }
+  };
+
+  const getDossierText = () => {
+    if (!dossier) return '';
+    return `COUNTRY POLICY DOSSIER: ${dossier.country}
+AGENDA TOPIC: ${dossier.topic}
+DATE: ${dossier.generatedAt}
+DISCLAIMER: AI-Generated Briefing - Cross-verify with official Ministry of Foreign Affairs cables.
+
+I. EXECUTIVE POLICY SUMMARY
+${dossier.executiveSummary}
+
+II. STRATEGIC ALLIANCES & DIPLOMATIC PARTNERS
+${dossier.alliancesAndBloc.map((a) => `• ${a}`).join('\n')}
+
+III. KEY RATIFIED TREATIES & CONVENTIONS
+${dossier.keyTreaties.map((t) => `• ${t}`).join('\n')}
+
+IV. CORE NATIONAL INTERESTS
+${dossier.nationalInterests.map((n) => `• ${n}`).join('\n')}
+
+V. DIPLOMATIC RED LINES (NON-NEGOTIABLES)
+${dossier.redLines.map((r) => `• ${r}`).join('\n')}
+
+VI. NEGOTIATING LEVERAGE
+${dossier.negotiatingLeverage.map((l) => `• ${l}`).join('\n')}
+
+VII. HISTORICAL PRECEDENTS
+${dossier.historicalPrecedents.map((h) => `• ${h}`).join('\n')}
+
+VIII. RECOMMENDED FLOOR STRATEGY
+${dossier.recommendedStrategy}`;
+  };
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(getDossierText());
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleExportPDF = () => {
+    exportDocumentToPDF({
+      title: `${context.country} Policy Dossier`,
+      country: context.country,
+      committee: context.committee,
+      topic: context.topic,
+      type: 'Policy Briefing',
+      content: getDossierText()
+    });
+  };
+
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Banner */}
+      <div className="bg-white dark:bg-[#071326] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+        <div>
+          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold text-sm uppercase tracking-wider mb-1">
+            <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>GEOPOLITICAL INTELLIGENCE & BRIEFINGS</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
+            Country Policy Research Dossier
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
+            Comprehensive geopolitical intelligence: treaties, alliances, sovereign red lines, and negotiation leverage for {context.country}.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            id="btn-generate-dossier"
+            onClick={handleResearch}
+            disabled={isResearching}
+            className="px-4 py-2.5 min-h-[44px] bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-sm rounded-xl shadow-xs transition-all flex items-center gap-2 border border-[#D4AF37]/30 active:scale-98"
+          >
+            {isResearching ? (
+              <div className="w-3.5 h-3.5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
+            )}
+            <span>Generate Deep Research Dossier</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mandatory Disclaimer Flag */}
+      <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-sm text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-xs">
+        <AlertTriangle className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold uppercase tracking-wider text-xs block text-amber-800 dark:text-amber-300">
+            Diplomatic Verification Notice:
+          </span>
+          <p className="mt-0.5 leading-relaxed">
+            This dossier is synthesized via DeepSeek AI foreign policy analysis. While grounded in authentic historical positions, delegates must verify specific treaty ratification years and formal UN voting records prior to citing in formal committee debate.
+          </p>
+        </div>
+      </div>
+
+      {errorMsg && <ErrorAlert message={errorMsg} />}
+
+      {/* Dossier Card */}
+      {dossier && (
+        <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden transition-colors">
+          {/* Dossier Header */}
+          <div className="p-5 sm:p-6 bg-slate-50 dark:bg-[#0b1b33] border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold text-[#0B1F3A] dark:text-white">
+                  {dossier.country}
+                </span>
+                <span className="text-sm px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 font-semibold">
+                  {context.committee}
+                </span>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Agenda: <strong>{dossier.topic}</strong> • Generated {dossier.generatedAt}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                id="btn-copy-dossier"
+                onClick={handleCopy}
+                className="px-3.5 py-2 min-h-[40px] rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold flex items-center gap-1.5 transition-colors active:scale-98"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? 'Copied' : 'Copy Dossier'}</span>
+              </button>
+
+              <button
+                id="btn-export-dossier-pdf"
+                onClick={handleExportPDF}
+                className="px-3.5 py-2 min-h-[40px] rounded-xl bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] text-sm font-bold flex items-center gap-1.5 shadow-xs active:scale-98"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export PDF</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Dossier Sections */}
+          <div className="p-5 sm:p-6 space-y-6">
+            {/* Executive Summary */}
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                I. Executive Foreign Policy Stance
+              </h3>
+              <p className="p-4 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+                {dossier.executiveSummary}
+              </p>
+            </div>
+
+            {/* Alliances & Treaties Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Alliances */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-blue-400" />
+                  <span>Strategic Alliances & Diplomatic Partners</span>
+                </h3>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                  {dossier.alliancesAndBloc.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Treaties */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <Scale className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-blue-400" />
+                  <span>Key Ratified Treaties & Conventions</span>
+                </h3>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                  {dossier.keyTreaties.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Red Lines & Leverage */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Red lines */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                  <span>Sovereign Red Lines (Non-Negotiables)</span>
+                </h3>
+                <div className="p-4 rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 space-y-2 text-sm">
+                  {dossier.redLines.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-rose-900 dark:text-rose-200">
+                      <span className="text-rose-600 dark:text-rose-400 font-bold shrink-0">✕</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Leverage */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                  <span>Negotiating Leverage & Bargaining Cards</span>
+                </h3>
+                <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-2 text-sm">
+                  {dossier.negotiatingLeverage.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-amber-950 dark:text-amber-200">
+                      <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0">★</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Floor Strategy */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Recommended Floor & Unmoderated Strategy
+              </h3>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-slate-900 to-[#0B1F3A] dark:from-[#050f1e] dark:to-[#0B1F3A] text-slate-100 text-sm leading-relaxed space-y-1 border border-slate-800">
+                <p className="text-amber-300 font-bold uppercase text-xs tracking-wider">
+                  Dais Tactical Advisory:
+                </p>
+                <p>{dossier.recommendedStrategy}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

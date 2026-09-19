@@ -1,0 +1,240 @@
+import React, { useState } from 'react';
+import { useSwipeDismiss } from '../hooks/useSwipeDismiss';
+import { DelegateContext, SupportedLanguage, SUPPORTED_LANGUAGES } from '../types';
+import { UN_COMMITTEES, UN_COUNTRIES, PAKISTAN_POLITICAL_PARTIES } from '../data/unPresets';
+import { Globe, Shield, Sparkles, Check, ArrowRight, X, Languages } from 'lucide-react';
+
+interface OnboardingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentContext: DelegateContext;
+  onSaveContext: (ctx: DelegateContext) => void;
+}
+
+export const OnboardingModal: React.FC<OnboardingModalProps> = ({
+  isOpen,
+  onClose,
+  currentContext,
+  onSaveContext
+}) => {
+  const [country, setCountry] = useState(currentContext.country || 'United States of America');
+  const [politicalParty, setPoliticalParty] = useState(currentContext.politicalParty || PAKISTAN_POLITICAL_PARTIES[0]);
+  const [committee, setCommittee] = useState(currentContext.committee || 'UNSC');
+  const [topic, setTopic] = useState(currentContext.topic || 'Non-Proliferation and Regulation of Lethal Autonomous Weapons Systems (LAWS)');
+  const [delegateName, setDelegateName] = useState(currentContext.delegateName || 'Distinguished Delegate');
+  const [language, setLanguage] = useState<SupportedLanguage>(currentContext.language || 'English');
+
+  const { offset, isSwiping, touchHandlers } = useSwipeDismiss({
+    onDismiss: onClose,
+    direction: 'down',
+    threshold: 60,
+    enabled: isOpen
+  });
+
+  if (!isOpen) return null;
+
+  const selectedCommitteeObj = UN_COMMITTEES.find(c => c.id === committee);
+
+  const handleCommitteeChange = (commId: string) => {
+    setCommittee(commId);
+  };
+
+  const isPNA = committee.toLowerCase().includes('pakistan') || committee.toLowerCase().includes('pna') || committee.toLowerCase().includes('national assembly');
+  const handleSave = () => {
+    onSaveContext({
+      country,
+      politicalParty,
+      committee,
+      topic,
+      delegateName,
+      language
+    });
+    onClose();
+  };
+
+  return (
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+    >
+      <div 
+        id="onboarding-modal-card"
+        {...touchHandlers}
+        style={{
+          transform: offset.y > 0 ? `translateY(${offset.y}px)` : undefined,
+          transition: isSwiping ? 'none' : 'transform 0.2s ease-out'
+        }}
+        className="bg-white dark:bg-[#0c1c33] rounded-2xl sm:rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative max-h-[92vh] flex flex-col transition-colors"
+      >
+        {/* Swipe-to-dismiss pull handle indicator for mobile */}
+        <div className="sm:hidden flex justify-center pt-2 pb-1 bg-[#0B1F3A] cursor-grab active:cursor-grabbing border-b border-[#D4AF37]/10">
+          <div className="w-12 h-1 rounded-full bg-slate-400/60" />
+        </div>
+
+        {/* Navy Header */}
+        <div className="bg-[#0B1F3A] text-white p-5 sm:p-6 relative border-b border-[#D4AF37]/30 shrink-0">
+          <button
+            id="btn-close-onboarding"
+            onClick={onClose}
+            className="absolute top-4 right-4 text-slate-300 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center gap-2 text-[#D4AF37] mb-1 text-sm font-bold tracking-widest uppercase">
+            <Shield className="w-4 h-4 text-[#D4AF37]" />
+            <span>CONFERENCE ONBOARDING PROTOCOL</span>
+          </div>
+
+          <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+            Configure Your Delegation Dossier
+          </h2>
+          <p className="text-sm text-slate-300 mt-1 leading-relaxed">
+            Set your country and committee once. Yeilded synchronizes this diplomatic context across all tools—speeches, position papers, resolution clauses, and debate practice.
+          </p>
+        </div>
+
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-slate-900 dark:text-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Country Selector */}
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                {isPNA ? 'Political Party' : 'Represented Nation'}
+              </label>
+              <select
+                id="onboarding-country-select"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full px-3 py-2.5 min-h-[44px] text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#071326] text-slate-800 dark:text-slate-200"
+              >
+                {(isPNA ? PAKISTAN_POLITICAL_PARTIES : UN_COUNTRIES).map((c) => (<option key={c} value={c}>{c}</option>))}
+              </select>
+            </div>
+
+            {/* Committee Selector */}
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Committee / Forum
+              </label>
+              <select
+                id="onboarding-committee-select"
+                value={committee}
+                onChange={(e) => handleCommitteeChange(e.target.value)}
+                className="w-full px-3 py-2.5 min-h-[44px] text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#071326] text-slate-800 dark:text-slate-200"
+              >
+                {UN_COMMITTEES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Committee Mandate Info Pill */}
+          {selectedCommitteeObj && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider mb-1">
+                <span>Committee Mandate & Scope</span>
+                {selectedCommitteeObj.category && (
+                  <span className="px-1.5 py-0.5 rounded text-xs bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+                    {selectedCommitteeObj.category.toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                {selectedCommitteeObj.mandate}
+              </p>
+            </div>
+          )}
+
+          {/* Agenda Item / Topic with Quick Templates */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Committee Agenda Topic
+              </label>
+
+            </div>
+            <textarea
+              id="onboarding-topic-input"
+              rows={2}
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. Non-Proliferation and Regulation of Lethal Autonomous Weapons Systems"
+              className="w-full p-3 text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#071326] text-slate-800 dark:text-slate-200 resize-none leading-relaxed"
+            />
+          </div>
+
+          {/* Delegate Title and Answer Language */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Delegate Diplomatic Title
+              </label>
+              <input
+                id="onboarding-delegate-name-input"
+                type="text"
+                value={delegateName}
+                onChange={(e) => setDelegateName(e.target.value)}
+                placeholder="e.g. Ambassador Alex Chen"
+                className="w-full px-3 py-2.5 min-h-[44px] text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#071326] text-slate-800 dark:text-slate-200"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Working / Answer Language</span>
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-normal">Roman Urdu & UN</span>
+              </label>
+              <select
+                id="onboarding-language-select"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+                className="w-full px-3 py-2.5 min-h-[44px] text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#071326] text-slate-800 dark:text-slate-200"
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.flag} {lang.label} ({lang.native})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Quick preset banner */}
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-start gap-3">
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-900 dark:text-amber-300 leading-normal">
+              <strong>Tip:</strong> Switching committees automatically updates the agenda topic and equips the speech writer and clause generator with specialized diplomatic terminology for that forum.
+            </p>
+          </div>
+
+          <div className="pt-3 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+            <button
+              id="btn-cancel-onboarding"
+              type="button"
+              onClick={onClose}
+              className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-xl"
+            >
+              Cancel
+            </button>
+            <button
+              id="btn-save-onboarding"
+              type="button"
+              onClick={handleSave}
+              className="w-full sm:w-auto px-6 py-2.5 min-h-[44px] bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 border border-[#D4AF37]/40 active:scale-98"
+            >
+              <span>Initialize Delegation Context</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+

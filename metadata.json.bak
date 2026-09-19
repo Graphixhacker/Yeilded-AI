@@ -1,0 +1,7 @@
+{
+  "name": "MUN Companion",
+  "description": "AI-powered Model United Nations toolkit for delegates: Position Paper Generator, Speech Writer, Clause Builder, RoP Assistant, Policy Research, Crisis Simulator, and Debate Practice.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
