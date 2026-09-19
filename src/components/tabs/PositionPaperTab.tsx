@@ -4,6 +4,9 @@ import { UN_COMMITTEES, PAKISTAN_POLITICAL_PARTIES } from '../../data/unPresets'
 import { api } from '../../services/api';
 import { exportDocumentToPDF, exportDocumentToWord, copyToClipboard } from '../../utils/exportUtils';
 import { ErrorAlert } from '../ErrorAlert';
+import { BottomSheetPicker, PickerOption } from '../BottomSheetPicker';
+import { SkeletonLoader } from '../SkeletonLoader';
+import { DocumentActionBar } from '../DocumentActionBar';
 import {
   FileText,
   Sparkles,
@@ -18,7 +21,9 @@ import {
   BookOpen,
   HelpCircle,
   Layers,
-  ChevronDown
+  ChevronDown,
+  ChevronUp,
+  Search
 } from 'lucide-react';
 
 interface PositionPaperTabProps {
@@ -46,6 +51,9 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
   const [copied, setCopied] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showCommitteePicker, setShowCommitteePicker] = useState(false);
+  const [isStanceExpanded, setIsStanceExpanded] = useState(false);
+  const [isGuidelinesExpanded, setIsGuidelinesExpanded] = useState(false);
 
   const isFree = !user || user.tier === 'free';
   const freeLeft = user ? Math.max(0, 3 - user.generationsUsed) : 3;
@@ -60,9 +68,23 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
   const isUNICEF = (context.committee || '').toLowerCase().includes('unicef');
   const isINTERPOL = (context.committee || '').toLowerCase().includes('interpol');
 
+  const committeePickerOptions: PickerOption[] = UN_COMMITTEES.map((comm) => ({
+    value: comm.id,
+    label: comm.name,
+    description: comm.mandate,
+    badge: comm.category ? comm.category.toUpperCase() : 'UN'
+  }));
+
   const handleCommitteeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
-    console.log('[Yeilded] Committee selected:', selectedId);
+    if (onUpdateContext) {
+      onUpdateContext({
+        committee: selectedId
+      });
+    }
+  };
+
+  const handleCommitteeSelect = (selectedId: string) => {
     if (onUpdateContext) {
       onUpdateContext({
         committee: selectedId
@@ -270,15 +292,35 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
             </h3>
 
             <div className="space-y-3.5 text-sm">
-              {/* Committee Selector Dropdown */}
+              {/* Committee Selector Dropdown & Mobile Bottom Sheet Trigger */}
               <div>
                 <label 
                   htmlFor="select-paper-committee"
-                  className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 block mb-1"
+                  className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center justify-between mb-1"
                 >
-                  Committee Forum / Legislative Body
+                  <span>Committee Forum / Legislative Body</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCommitteePicker(true)}
+                    className="sm:hidden text-amber-700 dark:text-amber-400 font-bold hover:underline flex items-center gap-1 text-[11px]"
+                  >
+                    <Search className="w-3 h-3" />
+                    <span>Search list</span>
+                  </button>
                 </label>
-                <div className="relative">
+                
+                {/* Mobile Tap Button that opens BottomSheetPicker */}
+                <button
+                  type="button"
+                  onClick={() => setShowCommitteePicker(true)}
+                  className="sm:hidden w-full min-h-[48px] p-3 text-left rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-sm flex items-center justify-between touch-press"
+                >
+                  <span className="truncate pr-2">{currentComm.name}</span>
+                  <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                </button>
+
+                {/* Desktop Native Select */}
+                <div className="relative hidden sm:block">
                   <select
                     id="select-paper-committee"
                     value={context.committee}
@@ -297,11 +339,11 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
 
               {/* Committee Mandate Info Pill */}
               {currentComm && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2">
                   <Layers className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-bold block">Mandate:</span>
-                    <span>{currentComm.mandate}</span>
+                    <span className="line-clamp-2 sm:line-clamp-none">{currentComm.mandate}</span>
                   </div>
                 </div>
               )}
@@ -321,7 +363,7 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                     value={context.country}
                     onChange={(e) => onUpdateContext && onUpdateContext({ country: e.target.value })}
                     placeholder={isINTERPOL ? 'e.g. France (NCB Paris)' : 'e.g. Pakistan, United States, Brazil'}
-                    className="w-full min-h-[44px] p-3 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] transition-colors"
+                    className="w-full min-h-[48px] p-3 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-base focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] transition-colors"
                   />
                 </div>
               )}
@@ -338,7 +380,7 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                     id="input-paper-party"
                     value={context.politicalParty || PAKISTAN_POLITICAL_PARTIES[0]}
                     onChange={(e) => onUpdateContext && onUpdateContext({ politicalParty: e.target.value })}
-                    className="w-full min-h-[44px] p-3 pr-8 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] appearance-none cursor-pointer transition-colors"
+                    className="w-full min-h-[48px] p-3 pr-8 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-base focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] appearance-none cursor-pointer transition-colors"
                   >
                     {PAKISTAN_POLITICAL_PARTIES.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -351,7 +393,7 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
               <div>
                 <label 
                   htmlFor="input-paper-topic"
-                  className="text-sm font-bold uppercase text-slate-500 dark:text-slate-400 block mb-1"
+                  className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 block mb-1"
                 >
                   Agenda Topic
                 </label>
@@ -361,7 +403,7 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                   value={context.topic}
                   onChange={(e) => onUpdateContext && onUpdateContext({ topic: e.target.value })}
                   placeholder="Enter specific crisis agenda or debate item..."
-                  className="w-full min-h-[44px] p-3 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] transition-colors"
+                  className="w-full min-h-[48px] p-3 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-base focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] transition-colors"
                 />
               </div>
 
@@ -372,14 +414,14 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                   className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center justify-between mb-1"
                 >
                   <span>Answer / Output Language</span>
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Roman Urdu & Multilingual</span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Multilingual</span>
                 </label>
                 <div className="relative">
                   <select
                     id="select-paper-language"
                     value={context.language || 'English'}
                     onChange={(e) => onUpdateContext && onUpdateContext({ language: e.target.value as SupportedLanguage })}
-                    className="w-full min-h-[44px] p-3 pr-8 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] appearance-none cursor-pointer transition-colors"
+                    className="w-full min-h-[48px] p-3 pr-8 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 text-base focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] appearance-none cursor-pointer transition-colors"
                   >
                     {SUPPORTED_LANGUAGES.map((lang) => (
                       <option key={lang.id} value={lang.id}>
@@ -392,127 +434,161 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
               </div>
             </div>
 
-            {/* Optional Key Stance Points */}
+            {/* Collapsible Key Stance Points Accordion */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                  Key Stance Points (Optional)
-                </label>
-                <button
-                  id="btn-load-sample-points"
-                  type="button"
-                  onClick={handleLoadSample}
-                  className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 font-semibold hover:underline min-h-[32px] flex items-center"
-                >
-                  Load sample points
-                </button>
-              </div>
-              <textarea
-                id="input-stance-points"
-                rows={4}
-                value={stancePoints}
-                onChange={(e) => setStancePoints(e.target.value)}
-                placeholder={
-                  isPNA
-                    ? "Constituency priorities (e.g., Article 160 NFC award, CCI water distribution, flood rehabilitation PSDP grants)..."
-                    : isUNICEF
-                    ? "Child welfare priorities (e.g., CRC obligations, RUTF local production, mobile learning centers, child labor bans)..."
-                    : isINTERPOL
-                    ? "Law enforcement directives (e.g., I-24/7 telemetry exchange, Red Notice integrity, joint cyber operations, forensic vaults)..."
-                    : "Bullet points or specific doctrines your delegation wants included (e.g. prioritize sovereignty, propose multilateral fund, oppose sanctions)..."
-                }
-                className="w-full p-3 text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 resize-none leading-relaxed transition-colors"
-              />
+              <button
+                type="button"
+                onClick={() => setIsStanceExpanded(!isStanceExpanded)}
+                className="w-full flex items-center justify-between py-2 text-left touch-press"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                    Key Stance Directives (Optional)
+                  </span>
+                  {stancePoints.trim() && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <span>{isStanceExpanded ? 'Hide' : 'Add custom points'}</span>
+                  {isStanceExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </button>
+
+              {isStanceExpanded && (
+                <div className="space-y-2 mt-2 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-end">
+                    <button
+                      id="btn-load-sample-points"
+                      type="button"
+                      onClick={handleLoadSample}
+                      className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 font-semibold hover:underline min-h-[32px] flex items-center"
+                    >
+                      Load sample points
+                    </button>
+                  </div>
+                  <textarea
+                    id="input-stance-points"
+                    rows={4}
+                    value={stancePoints}
+                    onChange={(e) => setStancePoints(e.target.value)}
+                    placeholder={
+                      isPNA
+                        ? "Constituency priorities (e.g., Article 160 NFC award, CCI water distribution)..."
+                        : isUNICEF
+                        ? "Child welfare priorities (e.g., CRC obligations, RUTF local production)..."
+                        : isINTERPOL
+                        ? "Law enforcement directives (e.g., I-24/7 telemetry exchange, Red Notice integrity)..."
+                        : "Bullet points or specific doctrines your delegation wants included..."
+                    }
+                    className="w-full p-3 text-base border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 resize-none leading-relaxed transition-colors"
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Action Button */}
-            <button
-              id="btn-generate-position-paper"
-              onClick={handleGenerate}
-              disabled={isGenerating || isLimitBlocked}
-              className="w-full min-h-[44px] py-3 px-4 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
-                  <span>DeepSeek Drafting Position Paper...</span>
-                </>
-              ) : isLimitBlocked ? (
-                <>
-                  <Lock className="w-4 h-4 text-amber-400" />
-                  <span>Free Limit Reached — Upgrade to Draft</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
-                  <span>
-                    {isPNA
-                      ? 'Draft Parliamentary Policy Brief'
-                      : isUNICEF
-                      ? 'Draft UNICEF Policy Paper'
-                      : isINTERPOL
-                      ? 'Draft Law Enforcement Dossier'
-                      : 'Draft Full Position Paper'}
-                  </span>
-                </>
-              )}
-            </button>
+            {/* Desktop Action Button */}
+            <div className="hidden lg:block pt-1">
+              <button
+                id="btn-generate-position-paper"
+                onClick={handleGenerate}
+                disabled={isGenerating || isLimitBlocked}
+                className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+                    <span>Drafting Position Paper...</span>
+                  </>
+                ) : isLimitBlocked ? (
+                  <>
+                    <Lock className="w-4 h-4 text-amber-400" />
+                    <span>Free Limit Reached — Upgrade to Draft</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
+                    <span>
+                      {isPNA
+                        ? 'Draft Parliamentary Policy Brief'
+                        : isUNICEF
+                        ? 'Draft UNICEF Policy Paper'
+                        : isINTERPOL
+                        ? 'Draft Law Enforcement Dossier'
+                        : 'Draft Full Position Paper'}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Tips Card tailored to committee */}
-          <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-[#071326] border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400 space-y-1.5 transition-colors">
-            <p className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37]" />
-              <span>
-                {isPNA
-                  ? 'Pakistani Parliamentary Brief Format:'
-                  : isUNICEF
-                  ? 'UNICEF Executive Board Format:'
-                  : isINTERPOL
-                  ? 'INTERPOL Law Enforcement Dossier Format:'
-                  : 'UN Standard Four-Part Format:'}
-              </span>
-            </p>
-            {isPNA ? (
-              <p className="text-xs leading-relaxed">
-                1. <strong>Legislative Genesis:</strong> 1973 Constitution & 18th Amendment<br/>
-                2. <strong>Parliamentary Stance:</strong> Constituency priorities & NFC fiscal allocations<br/>
-                3. <strong>Existing Framework:</strong> Acts of Parliament & PAC scrutiny<br/>
-                4. <strong>Proposed Solutions:</strong> Statutory bills & CCI coordination
+          {/* Tips Card tailored to committee - Collapsible on Mobile */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#071326] border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400 space-y-2 transition-colors">
+            <button
+              type="button"
+              onClick={() => setIsGuidelinesExpanded(!isGuidelinesExpanded)}
+              className="w-full flex items-center justify-between text-left touch-press"
+            >
+              <p className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                <BookOpen className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37]" />
+                <span>
+                  {isPNA
+                    ? 'Parliamentary Format Guide'
+                    : isUNICEF
+                    ? 'UNICEF Board Guidelines'
+                    : isINTERPOL
+                    ? 'INTERPOL Dossier Standard'
+                    : 'UN 4-Part Structure Guide'}
+                </span>
               </p>
-            ) : isUNICEF ? (
-              <p className="text-xs leading-relaxed">
-                1. <strong>Humanitarian Context:</strong> CRC rights & pediatric metrics<br/>
-                2. <strong>Child Rights Doctrine:</strong> Sovereign social protection commitments<br/>
-                3. <strong>Protection Initiatives:</strong> National statutes & UNICEF partnerships<br/>
-                4. <strong>Field Programs:</strong> Therapeutic pipelines & safe learning spaces
-              </p>
-            ) : isINTERPOL ? (
-              <p className="text-xs leading-relaxed">
-                1. <strong>Threat Assessment:</strong> Cross-border syndicate methodology<br/>
-                2. <strong>NCB Posture:</strong> I-24/7 database interoperability & notice standards<br/>
-                3. <strong>Operational Record:</strong> Global strike operations & crypto seizures<br/>
-                4. <strong>Tactical Directives:</strong> Real-time alerts & digital forensics vaults
-              </p>
-            ) : (
-              <p className="text-xs leading-relaxed">
-                1. <strong>Background:</strong> Historical roots & UN conventions<br/>
-                2. <strong>National Stance:</strong> Sovereign geopolitical interests<br/>
-                3. <strong>Past Actions:</strong> Domestic & international treaties<br/>
-                4. <strong>Proposed Solutions:</strong> Operative, actionable proposals
-              </p>
-            )}
+              <div className="sm:hidden text-slate-400">
+                {isGuidelinesExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </div>
+            </button>
+
+            <div className={`${isGuidelinesExpanded ? 'block' : 'hidden sm:block'} pt-1`}>
+              {isPNA ? (
+                <p className="text-xs leading-relaxed space-y-1">
+                  1. <strong>Legislative Genesis:</strong> 1973 Constitution & 18th Amendment<br/>
+                  2. <strong>Parliamentary Stance:</strong> Constituency priorities & NFC allocations<br/>
+                  3. <strong>Existing Framework:</strong> Acts of Parliament & PAC scrutiny<br/>
+                  4. <strong>Proposed Solutions:</strong> Statutory bills & CCI coordination
+                </p>
+              ) : isUNICEF ? (
+                <p className="text-xs leading-relaxed space-y-1">
+                  1. <strong>Humanitarian Context:</strong> CRC rights & pediatric metrics<br/>
+                  2. <strong>Child Rights Doctrine:</strong> Sovereign social protection commitments<br/>
+                  3. <strong>Protection Initiatives:</strong> National statutes & UNICEF partnerships<br/>
+                  4. <strong>Field Programs:</strong> Therapeutic pipelines & safe learning spaces
+                </p>
+              ) : isINTERPOL ? (
+                <p className="text-xs leading-relaxed space-y-1">
+                  1. <strong>Threat Assessment:</strong> Cross-border syndicate methodology<br/>
+                  2. <strong>NCB Posture:</strong> I-24/7 database interoperability & notice standards<br/>
+                  3. <strong>Operational Record:</strong> Global strike operations & crypto seizures<br/>
+                  4. <strong>Tactical Directives:</strong> Real-time alerts & digital forensics vaults
+                </p>
+              ) : (
+                <p className="text-xs leading-relaxed space-y-1">
+                  1. <strong>Background:</strong> Historical roots & UN conventions<br/>
+                  2. <strong>National Stance:</strong> Sovereign geopolitical interests<br/>
+                  3. <strong>Past Actions:</strong> Domestic & international treaties<br/>
+                  4. <strong>Proposed Solutions:</strong> Operative, actionable proposals
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Right Column: Output / Rich Editor */}
         <div className="lg:col-span-7">
-          <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-full min-h-[580px] transition-colors">
+          <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-full min-h-[520px] transition-colors overflow-hidden">
             {/* Output Toolbar */}
-            <div className="p-4 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 dark:bg-[#0b1b33] rounded-t-2xl transition-colors">
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 dark:bg-[#0b1b33] transition-colors">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  Document Output
+                  Dossier Output
                 </span>
                 {generatedText && (
                   <span className="text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded font-mono">
@@ -521,140 +597,69 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  id="btn-copy-toolbar"
-                  onClick={handleCopy}
-                  disabled={!generatedText}
-                  className={`px-3 py-1.5 min-h-[38px] rounded-lg border text-sm font-semibold flex items-center gap-1.5 transition-all shadow-2xs disabled:opacity-40 active:scale-98 ${
-                    copied
-                      ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300'
-                      : 'border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                  }`}
-                  title="Copy full text to clipboard"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-emerald-700 dark:text-emerald-300 font-bold">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  id="btn-save-draft"
-                  onClick={handleSaveDraft}
-                  disabled={!generatedText}
-                  className="px-2.5 py-1.5 min-h-[38px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 active:scale-98"
-                  title="Save to My Archive"
-                >
-                  <Save className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{savedSuccess ? 'Saved!' : 'Save'}</span>
-                </button>
-
-                <button
-                  id="btn-export-docx"
-                  onClick={handleExportWord}
-                  disabled={!generatedText}
-                  className="px-2.5 py-1.5 min-h-[38px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 active:scale-98"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>DOCX</span>
-                </button>
-
-                <button
-                  id="btn-export-pdf"
-                  onClick={handleExportPDF}
-                  disabled={!generatedText}
-                  className="px-3 py-1.5 min-h-[38px] rounded-lg bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] text-sm font-bold flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-40 active:scale-98"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>PDF</span>
-                </button>
-              </div>
+              {generatedText && (
+                <DocumentActionBar
+                  documentTitle={`${context.country} - ${currentComm.id} Position Paper`}
+                  content={generatedText}
+                  onExportWord={handleExportWord}
+                  onExportPDF={handleExportPDF}
+                />
+              )}
             </div>
 
             {/* Editable Content Area */}
-            <div className="p-4 flex-1 flex flex-col">
+            <div className="p-3 sm:p-4 flex-1 flex flex-col">
               {isGenerating ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center space-y-4">
-                  <div className="w-12 h-12 rounded-full border-3 border-[#0B1F3A] dark:border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin"></div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-base">
-                      Drafting Diplomatic Position Paper
-                    </h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                      Synthesizing international treaties, {context.country} foreign policy doctrines, and operative solutions via DeepSeek...
-                    </p>
-                  </div>
-                </div>
+                <SkeletonLoader
+                  title={`Drafting ${context.country} Position Paper...`}
+                  steps={[
+                    `Analyzing ${currentComm.id} mandate & past resolutions...`,
+                    `Synthesizing ${context.country} foreign policy & treaties...`,
+                    'Drafting operative clauses & bilateral solutions...',
+                    'Formatting diplomatic headings & preamble...'
+                  ]}
+                />
               ) : generatedText ? (
                 <div className="relative flex-1 flex flex-col min-h-[440px]">
-                  {/* Dedicated Rich Text Action Bar */}
+                  {/* Save Draft Toolbar */}
                   <div className="flex items-center justify-between px-3 py-2 bg-slate-100/90 dark:bg-[#0b1b33] border border-b-0 border-slate-200 dark:border-slate-800 rounded-t-xl text-xs text-slate-600 dark:text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37]" />
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">UN Diplomatic Paper (Editable)</span>
-                      <span className="hidden sm:inline text-slate-400 dark:text-slate-500">• Ready for Word / Google Docs</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37] shrink-0" />
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                        Editable Diplomatic Paper
+                      </span>
                     </div>
 
-                    {/* Prominent Copy to Clipboard Button on the Editor itself */}
                     <button
-                      id="btn-copy-to-clipboard-editor"
-                      type="button"
-                      onClick={handleCopy}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-lg text-sm font-bold transition-all shadow-xs cursor-pointer ${
-                        copied
-                          ? 'bg-emerald-600 text-white shadow-emerald-200'
-                          : 'bg-[#0B1F3A] hover:bg-[#15345d] text-[#D4AF37] hover:text-amber-200 active:scale-95'
-                      }`}
-                      title="Copy full position paper to clipboard to paste into document editors"
+                      id="btn-save-draft"
+                      onClick={handleSaveDraft}
+                      className="px-2.5 py-1 min-h-[32px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors touch-press"
+                      title="Save to My Archive"
                     >
-                      {copied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
-                          <span>Copied to Clipboard!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 stroke-[2.2]" />
-                          <span>Copy to Clipboard</span>
-                        </>
-                      )}
+                      <Save className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{savedSuccess ? 'Saved!' : 'Save Draft'}</span>
                     </button>
                   </div>
 
-                  {/* Textarea */}
+                  {/* Textarea formatted for reading & editing */}
                   <textarea
                     id="position-paper-textarea"
                     value={generatedText}
                     onChange={(e) => setGeneratedText(e.target.value)}
-                    className="w-full flex-1 p-4 text-sm leading-relaxed border border-slate-200 dark:border-slate-800 rounded-b-xl bg-white dark:bg-[#0b1b33] text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] resize-none"
+                    className="w-full flex-1 p-4 text-base sm:text-[17px] leading-relaxed border border-slate-200 dark:border-slate-800 rounded-b-xl bg-white dark:bg-[#0b1b33] text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] resize-none"
                     placeholder="Your position paper will appear here..."
                   />
-
-                  {/* Visual Toast Notification on Copy */}
-                  {copied && (
-                    <div className="absolute bottom-4 right-4 bg-[#0B1F3A] text-white text-sm px-3.5 py-2 rounded-xl shadow-xl flex items-center gap-2 border border-emerald-500/50 animate-in fade-in slide-in-from-bottom-2 z-10">
-                      <Check className="w-4 h-4 text-emerald-400" />
-                      <span className="font-medium">Position paper copied to clipboard. Ready to paste!</span>
-                    </div>
-                  )}
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl m-2">
-                  <FileText className="w-12 h-12 stroke-1 text-slate-300 dark:text-slate-600 mb-3" />
+                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl m-2">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-400 mb-3">
+                    <FileText className="w-6 h-6 stroke-[1.5]" />
+                  </div>
                   <p className="font-bold text-slate-700 dark:text-slate-300 text-base">
-                    No Position Paper Generated Yet
+                    Ready to Draft Your Paper
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-                    Click "Draft Full Position Paper" on the left to create a UN-formatted diplomatic dossier for {context.country}.
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1 px-4">
+                    Tap the button below to generate a formatted UN position paper tailored to {context.country}'s geopolitical stance.
                   </p>
                 </div>
               )}
@@ -662,6 +667,52 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Primary Action Button (Fixed above bottom tab bar) */}
+      <div className="lg:hidden fixed bottom-[calc(3.75rem+max(env(safe-area-inset-bottom,8px),8px))] left-0 right-0 p-3 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
+        <button
+          id="btn-generate-position-paper-mobile"
+          onClick={handleGenerate}
+          disabled={isGenerating || isLimitBlocked}
+          className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 touch-press active:scale-98"
+        >
+          {isGenerating ? (
+            <>
+              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+              <span>Drafting Position Paper...</span>
+            </>
+          ) : isLimitBlocked ? (
+            <>
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>Upgrade for Unlimited Papers</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
+              <span>
+                {isPNA
+                  ? 'Draft Parliamentary Brief'
+                  : isUNICEF
+                  ? 'Draft UNICEF Paper'
+                  : isINTERPOL
+                  ? 'Draft Law Enforcement Dossier'
+                  : 'Draft Position Paper'}
+              </span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Bottom Sheet for Committee Selection */}
+      <BottomSheetPicker
+        isOpen={showCommitteePicker}
+        onClose={() => setShowCommitteePicker(false)}
+        title="Select Committee / Forum"
+        options={committeePickerOptions}
+        selectedValue={context.committee}
+        onSelect={handleCommitteeSelect}
+        placeholder="Search committees (UNSC, PNA, UNICEF...)"
+      />
     </div>
   );
 };

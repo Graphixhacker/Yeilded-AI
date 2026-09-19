@@ -4,7 +4,9 @@ import { ErrorAlert } from "../ErrorAlert";
 import { DelegateContext, User, ResolutionClause } from '../../types';
 import { PREAMBULATORY_STARTERS, OPERATIVE_STARTERS } from '../../data/unPresets';
 import { api } from '../../services/api';
-import { exportDocumentToPDF, copyToClipboard } from '../../utils/exportUtils';
+import { exportDocumentToPDF, exportDocumentToWord, copyToClipboard } from '../../utils/exportUtils';
+import { DocumentActionBar } from '../DocumentActionBar';
+import { SkeletonLoader } from '../SkeletonLoader';
 import {
   Layers,
   Sparkles,
@@ -277,14 +279,17 @@ ${operativeClauses
 
             {/* Starter Dropdown */}
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              <label 
+                htmlFor="select-clause-starter"
+                className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
+              >
                 Official UN Clause Starter
               </label>
               <select
                 id="select-clause-starter"
                 value={selectedStarter}
                 onChange={(e) => setSelectedStarter(e.target.value)}
-                className="w-full px-3 py-2 min-h-[42px] text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100"
+                className="w-full px-3 py-2.5 min-h-[48px] text-base font-semibold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37]"
               >
                 {(clauseType === 'preambulatory' ? PREAMBULATORY_STARTERS : OPERATIVE_STARTERS).map((s) => (
                   <option key={s} value={s}>{s}</option>
@@ -294,7 +299,10 @@ ${operativeClauses
 
             {/* Clause Content */}
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              <label 
+                htmlFor="textarea-clause-substance"
+                className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
+              >
                 Clause Substance
               </label>
               <textarea
@@ -303,7 +311,7 @@ ${operativeClauses
                 value={clauseContent}
                 onChange={(e) => setClauseContent(e.target.value)}
                 placeholder={`Type the clause text following "${selectedStarter}"...`}
-                className="w-full p-3 text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 resize-none leading-relaxed"
+                className="w-full p-3 text-base border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 resize-none leading-relaxed"
               />
             </div>
 
@@ -311,26 +319,26 @@ ${operativeClauses
               id="btn-add-clause"
               onClick={handleAddClause}
               disabled={!clauseContent.trim()}
-              className="w-full min-h-[44px] py-2.5 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-98"
+              className="w-full min-h-[48px] py-2.5 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm sm:text-base rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-98 touch-press"
             >
               <Plus className="w-4 h-4" />
               <span>Append Clause to Draft</span>
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-100 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            <p className="font-bold text-slate-800 dark:text-slate-200 mb-1">Diplomatic Drafter's Rules:</p>
+          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#071326] border border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="font-bold text-slate-800 dark:text-slate-200 mb-1 text-xs uppercase tracking-wider">Diplomatic Drafter's Rules:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
-              <li>Preambulatory clauses explain why action is being taken; they are italicized and end with a comma.</li>
-              <li>Operative clauses declare actionable solutions; they are numbered, underlined, and end with a semicolon (the final clause ends with a period).</li>
+              <li>Preambulatory clauses explain rationale; italicized, end with comma.</li>
+              <li>Operative clauses mandate action; numbered, underlined, end with semicolon.</li>
             </ul>
           </div>
         </div>
 
         {/* Clause List & Reordering */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-5 transition-colors">
-            <div className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
+          <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-4 sm:p-5 transition-colors">
+            <div className="flex flex-wrap items-center justify-between pb-3 sm:pb-4 mb-3 sm:mb-4 border-b border-slate-200 dark:border-slate-800 gap-2">
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
                   Draft Resolution Clauses ({clauses.length})
@@ -340,47 +348,44 @@ ${operativeClauses
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  id="btn-copy-draft"
-                  onClick={handleCopyDraft}
-                  className="px-3 py-1.5 min-h-[38px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 active:scale-98"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied' : 'Copy Full Draft'}</span>
-                </button>
-
-                <button
-                  id="btn-export-pdf"
-                  onClick={handleExportPDF}
-                  className="px-3 py-1.5 min-h-[38px] rounded-lg bg-[#0B1F3A] text-[#D4AF37] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-sm font-bold flex items-center gap-1.5 shadow-xs active:scale-98"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export PDF</span>
-                </button>
-              </div>
+              {clauses.length > 0 && (
+                <DocumentActionBar
+                  documentTitle={`${context.committee} - Draft Resolution (${context.country})`}
+                  content={compiledDraftText}
+                  onExportWord={() => exportDocumentToWord({
+                    title: `${context.committee} - Draft Resolution`,
+                    country: context.country,
+                    committee: context.committee,
+                    topic: context.topic,
+                    type: 'Draft Resolution',
+                    content: compiledDraftText
+                  })}
+                  onExportPDF={handleExportPDF}
+                />
+              )}
             </div>
 
             {/* Clauses Reorderable List */}
             {clauses.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 dark:text-slate-500">
-                <p className="text-sm">No clauses in draft. Add a clause or click "AI Suggest Clauses".</p>
+              <div className="text-center py-14 text-slate-400 dark:text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <p className="text-base font-bold text-slate-700 dark:text-slate-300">No clauses in draft</p>
+                <p className="text-xs sm:text-sm mt-1 max-w-sm mx-auto">Add a clause on the left or tap "AI Suggest Clauses" to draft clauses tailored for {context.country}.</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
                 {clauses.map((clause, index) => (
                   <div
                     key={clause.id}
-                    className={`p-4 rounded-xl border transition-all flex items-start justify-between gap-3 ${
+                    className={`p-3.5 sm:p-4 rounded-xl border transition-all flex items-start justify-between gap-2.5 sm:gap-3 ${
                       clause.type === 'preambulatory'
                         ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40 hover:border-amber-300'
                         : 'bg-blue-50/30 dark:bg-blue-950/20 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700'
                     }`}
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span
-                          className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                          className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
                             clause.type === 'preambulatory'
                               ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200'
                               : 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
@@ -389,7 +394,7 @@ ${operativeClauses
                           {clause.type === 'preambulatory' ? 'Preambulatory' : `Operative #${operativeClauses.findIndex(c => c.id === clause.id) + 1}`}
                         </span>
                       </div>
-                      <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+                      <p className="text-base sm:text-[17px] leading-relaxed text-slate-800 dark:text-slate-200">
                         <span
                           className={
                             clause.type === 'preambulatory'
@@ -403,12 +408,12 @@ ${operativeClauses
                       </p>
                     </div>
 
-                    {/* Controls: Up, Down, Delete */}
+                    {/* Controls: Up, Down, Delete with 44px+ touch targets */}
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => moveClause(index, 'up')}
                         disabled={index === 0}
-                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-30"
+                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-25 touch-press"
                         title="Move up"
                         aria-label="Move clause up"
                       >
@@ -417,7 +422,7 @@ ${operativeClauses
                       <button
                         onClick={() => moveClause(index, 'down')}
                         disabled={index === clauses.length - 1}
-                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-30"
+                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-25 touch-press"
                         title="Move down"
                         aria-label="Move clause down"
                       >
@@ -425,7 +430,7 @@ ${operativeClauses
                       </button>
                       <button
                         onClick={() => deleteClause(clause.id)}
-                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 touch-press"
                         title="Delete clause"
                         aria-label="Delete clause"
                       >
@@ -438,6 +443,28 @@ ${operativeClauses
             )}
           </div>
         </div>
+      </div>
+
+      {/* Mobile Sticky Action Bar */}
+      <div className="lg:hidden fixed bottom-[calc(3.75rem+max(env(safe-area-inset-bottom,8px),8px))] left-0 right-0 p-3 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
+        <button
+          id="btn-ai-suggest-clauses-mobile"
+          onClick={handleAISuggestClauses}
+          disabled={isSuggesting}
+          className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 touch-press active:scale-98"
+        >
+          {isSuggesting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+              <span>Generating AI Clauses...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
+              <span>AI Suggest Clauses ({context.country})</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

@@ -80,11 +80,12 @@ export const Header: React.FC<HeaderProps> = ({
       return (
         <button
           onClick={onOpenPricing}
-          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 text-sm font-semibold rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs sm:text-sm font-semibold rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors min-h-[38px]"
           title="Free Tier: 3 lifetime papers/speeches"
         >
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <span>Free: {remaining}/3 Left</span>
+          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span className="hidden sm:inline">Free: {remaining}/3 Left</span>
+          <span className="sm:hidden font-bold">{remaining}/3 Free</span>
         </button>
       );
     }
@@ -100,10 +101,11 @@ export const Header: React.FC<HeaderProps> = ({
         return (
           <button
             onClick={onOpenPricing}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1 text-sm font-bold rounded-full bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/10 dark:from-[#D4AF37]/30 dark:to-[#D4AF37]/15 text-[#0B1F3A] dark:text-[#D4AF37] border border-[#D4AF37] hover:bg-[#D4AF37]/30 transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1 text-xs sm:text-sm font-bold rounded-full bg-linear-to-r from-[#D4AF37]/20 to-[#D4AF37]/10 dark:from-[#D4AF37]/30 dark:to-[#D4AF37]/15 text-[#0B1F3A] dark:text-[#D4AF37] border border-[#D4AF37] hover:bg-[#D4AF37]/30 transition-all shadow-2xs min-h-[38px]"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] fill-[#D4AF37]" />
-            <span>{user.tier === '1week' ? '1-Week Pass' : 'Monthly Pass'}: {timeStr}</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] fill-[#D4AF37] shrink-0" />
+            <span className="hidden sm:inline">{user.tier === '1week' ? '1-Week Pass' : 'Monthly Pass'}: {timeStr}</span>
+            <span className="sm:hidden">{user.tier === '1week' ? '1W Pass' : 'Pass'}</span>
           </button>
         );
       }
@@ -113,14 +115,14 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#071326] border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs transition-colors duration-200">
+    <header className="h-14 sm:h-16 bg-white dark:bg-[#071326] border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs transition-colors duration-200">
       {/* Active Delegate Context Pill & Mobile Menu */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
         {onToggleMobileMenu && (
           <button
             id="mobile-hamburger-btn"
             onClick={onToggleMobileMenu}
-            className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:text-[#0B1F3A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+            className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:text-[#0B1F3A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors shrink-0"
             title="Open navigation menu"
             aria-label="Open navigation menu"
           >
@@ -128,29 +130,36 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
+        {/* Brand Crest on Mobile */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-[#0B1F3A] to-[#15345d] text-[#D4AF37] flex items-center justify-center font-black text-xs sm:text-sm shadow-xs border border-[#D4AF37]/40">
+            Y
+          </div>
+        </div>
+
         <button
           id="delegate-context-pill-btn"
           onClick={() => setShowContextModal(true)}
-          className="group flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0c1c33] hover:bg-slate-100 dark:hover:bg-[#102442] hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left max-w-[200px] xs:max-w-[260px] sm:max-w-none"
+          className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0c1c33] hover:bg-slate-100 dark:hover:bg-[#102442] hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left min-w-0 max-w-[130px] xs:max-w-[190px] sm:max-w-none min-h-[44px]"
           title="Click to change your delegate country or committee"
         >
-          <div className="w-7 h-7 shrink-0 rounded-lg bg-[#0B1F3A] text-[#D4AF37] flex items-center justify-center font-black text-sm shadow-xs border border-[#D4AF37]/30">
+          <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-[#0B1F3A] text-[#D4AF37] flex items-center justify-center font-black text-xs sm:text-sm shadow-xs border border-[#D4AF37]/30">
             {context.country.slice(0, 2).toUpperCase()}
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#0B1F3A] dark:group-hover:text-[#D4AF37] truncate">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#0B1F3A] dark:group-hover:text-[#D4AF37] truncate block">
                 {context.country}
               </span>
-              <span className="text-xs uppercase tracking-wider font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-300/60 dark:border-amber-700/60 shrink-0 hidden xs:inline-block">
+              <span className="text-[10px] sm:text-xs uppercase tracking-wider font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 px-1 py-0.2 rounded border border-amber-300/60 dark:border-amber-700/60 shrink-0 hidden xs:inline-block truncate max-w-[60px] sm:max-w-none">
                 {context.committee}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[130px] sm:max-w-[240px] md:max-w-[340px]">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate max-w-[100px] xs:max-w-[150px] sm:max-w-[240px] md:max-w-[340px]">
               {context.topic}
             </p>
           </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 ml-0.5 shrink-0" />
+          <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 shrink-0" />
         </button>
 
         <button
@@ -237,7 +246,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           id="currency-toggle-btn"
           onClick={onToggleCurrency}
-          className="hidden xs:flex items-center gap-1 px-2.5 py-1 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 min-h-[36px]"
+          className="hidden xs:flex items-center gap-1 px-2.5 py-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 min-h-[44px]"
           title="Toggle pricing currency between PKR and USD"
         >
           <span className="text-xs text-slate-500 dark:text-slate-400">CURR:</span>
@@ -249,7 +258,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="language-switcher-btn"
             onClick={() => setShowLangMenu(!showLangMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 min-h-[36px]"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 min-h-[44px] min-w-[44px] justify-center"
             title="Choose answer/generation language (e.g. English, Roman Urdu, etc.)"
             aria-label="Select answer language"
           >

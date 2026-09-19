@@ -111,44 +111,44 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Banner */}
-      <div className="bg-white dark:bg-[#071326] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+      <div className="bg-white dark:bg-[#071326] p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
         <div>
-          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm uppercase tracking-wider mb-1">
-            <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>PARLIAMENTARY RULES OF PROCEDURE</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
             Rules of Procedure (RoP) Assistant
           </h2>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
-            Instant parliamentary reference for UNA-USA and THIMUN procedures, plus an interactive AI Parliamentarian. Always free.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Instant parliamentary reference for UNA-USA & THIMUN, plus AI Parliamentarian rulings.
           </p>
         </div>
 
-        {/* Sub-view toggle */}
-        <div className="flex items-center bg-slate-100 dark:bg-[#0b1b33] p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+        {/* Sub-view toggle (full width on mobile) */}
+        <div className="grid grid-cols-2 sm:flex items-center bg-slate-100 dark:bg-[#0b1b33] p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 w-full sm:w-auto">
           <button
             id="btn-rop-view-cheatsheet"
             onClick={() => setActiveSubView('cheatsheet')}
-            className={`px-4 py-2 min-h-[40px] text-sm font-bold rounded-lg transition-all active:scale-98 ${
+            className={`px-3 sm:px-4 py-2 min-h-[42px] text-xs sm:text-sm font-bold rounded-lg transition-all text-center touch-press active:scale-98 ${
               activeSubView === 'cheatsheet'
                 ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-white dark:text-[#0B1F3A] shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Searchable Cheat Sheet
+            Cheat Sheet
           </button>
           <button
             id="btn-rop-view-chatbot"
             onClick={() => setActiveSubView('chatbot')}
-            className={`px-4 py-2 min-h-[40px] text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 active:scale-98 ${
+            className={`px-3 sm:px-4 py-2 min-h-[42px] text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 text-center touch-press active:scale-98 ${
               activeSubView === 'chatbot'
                 ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-white dark:text-[#0B1F3A] shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] dark:text-[#0B1F3A]" />
-            <span>Parliamentarian AI</span>
+            <span>AI Dais Counsel</span>
           </button>
         </div>
       </div>
@@ -156,20 +156,20 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
       {activeSubView === 'cheatsheet' ? (
         <div className="space-y-4">
           {/* Filters & Search */}
-          <div className="bg-white dark:bg-[#071326] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
+          <div className="bg-white dark:bg-[#071326] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 id="input-rop-search"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search motions, points, caucuses, voting thresholds..."
-                className="w-full pl-9 pr-3 py-2.5 min-h-[42px] text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100"
+                className="w-full pl-10 pr-3 py-2.5 min-h-[48px] text-base border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100"
               />
             </div>
 
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
               {[
                 { id: 'all', label: 'All Rules' },
                 { id: 'point', label: 'Points' },
@@ -181,9 +181,9 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
                   key={cat.id}
                   id={`btn-rop-cat-${cat.id}`}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-2 min-h-[38px] rounded-lg text-sm font-bold whitespace-nowrap transition-all active:scale-98 ${
+                  className={`px-3.5 py-2 min-h-[40px] rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all touch-press active:scale-98 ${
                     selectedCategory === cat.id
-                      ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0B1F3A]'
+                      ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0B1F3A] shadow-xs'
                       : 'bg-slate-100 dark:bg-[#0b1b33] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
                   }`}
                 >
@@ -205,15 +205,15 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
                 >
                   <div
                     onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
-                    className="p-4 cursor-pointer flex items-center justify-between bg-slate-50/50 dark:bg-[#0b1b33]/60 hover:bg-slate-50 dark:hover:bg-[#0b1b33] transition-colors"
+                    className="p-4 min-h-[56px] cursor-pointer flex items-center justify-between bg-slate-50/50 dark:bg-[#0b1b33]/60 hover:bg-slate-50 dark:hover:bg-[#0b1b33] transition-colors touch-press"
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#0B1F3A] text-[#D4AF37]">
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#0B1F3A] text-[#D4AF37]">
                           {item.category}
                         </span>
                         {item.interruptSpeaker && (
-                          <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">
+                          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">
                             May Interrupt
                           </span>
                         )}
@@ -223,13 +223,16 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
                       </h4>
                     </div>
 
-                    <button className="text-slate-400 dark:text-slate-500 p-2 min-h-[36px] min-w-[36px] flex items-center justify-center">
-                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <button 
+                      className="text-slate-400 dark:text-slate-500 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
+                      aria-label={isExpanded ? 'Collapse item' : 'Expand item'}
+                    >
+                      {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </button>
                   </div>
 
-                  <div className="p-4 pt-2 text-sm space-y-3 border-t border-slate-100 dark:border-slate-800">
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{item.explanation}</p>
+                  <div className="p-4 pt-2 text-sm sm:text-base space-y-3 border-t border-slate-100 dark:border-slate-800">
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base">{item.explanation}</p>
 
                     {/* Quick Specs Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 text-xs">
@@ -248,17 +251,28 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
                     </div>
 
                     {/* Verbatim Phrasing */}
-                    <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 space-y-1">
-                      <div className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
-                        Delegate Phrasing at Microphone:
+                    <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                          Delegate Phrasing at Microphone:
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(item.samplePhrasing);
+                          }}
+                          className="text-xs text-amber-700 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1"
+                        >
+                          Copy
+                        </button>
                       </div>
-                      <p className="italic text-sm text-slate-900 dark:text-slate-100 font-semibold">
-                        {item.samplePhrasing}
+                      <p className="italic text-sm sm:text-base text-slate-900 dark:text-slate-100 font-semibold leading-relaxed">
+                        "{item.samplePhrasing}"
                       </p>
                     </div>
 
                     {item.chairResponse && isExpanded && (
-                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#0b1b33] border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                         <span className="font-bold text-slate-800 dark:text-slate-200">Dais Standard Ruling: </span>
                         <span className="italic">{item.chairResponse}</span>
                       </div>
@@ -271,34 +285,34 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
         </div>
       ) : (
         /* Chatbot Sub-view */
-        <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col h-[600px] transition-colors">
+        <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col h-[560px] sm:h-[600px] transition-colors">
           {/* Chat header */}
-          <div className="p-4 bg-[#0B1F3A] text-white flex items-center justify-between border-b border-[#D4AF37]/30">
+          <div className="p-3.5 sm:p-4 bg-[#0B1F3A] text-white flex items-center justify-between border-b border-[#D4AF37]/30">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#D4AF37] text-[#0B1F3A] flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-[#D4AF37] text-[#0B1F3A] flex items-center justify-center font-bold">
                 <Shield className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="font-bold text-base">Parliamentary Counsel AI</h4>
-                <p className="text-xs text-slate-300">
+                <h4 className="font-bold text-sm sm:text-base">Parliamentary Counsel AI</h4>
+                <p className="text-[11px] sm:text-xs text-slate-300">
                   Instant rulings on UNA-USA & THIMUN procedural questions
                 </p>
               </div>
             </div>
-            <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/30">
-              Always Free
+            <span className="text-[10px] sm:text-xs bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/30">
+              Free
             </span>
           </div>
 
           {/* Chat messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50 dark:bg-[#050f1e]/50">
+          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/50 dark:bg-[#050f1e]/50">
             {chatMessages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-xs ${
+                  className={`max-w-[88%] sm:max-w-[80%] p-3.5 sm:p-4 rounded-2xl text-sm sm:text-base leading-relaxed shadow-xs ${
                     msg.sender === 'user'
                       ? 'bg-[#0B1F3A] dark:bg-[#0f2a4a] text-white rounded-br-none'
                       : 'bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-bl-none'
@@ -311,7 +325,7 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
 
             {isChatLoading && (
               <div className="flex justify-start">
-                <div className="bg-white dark:bg-[#0b1b33] p-3 rounded-2xl border border-slate-200 dark:border-slate-800 rounded-bl-none text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <div className="bg-white dark:bg-[#0b1b33] p-3 rounded-2xl border border-slate-200 dark:border-slate-800 rounded-bl-none text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <div className="w-3 h-3 border-2 border-[#0B1F3A] dark:border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
                   <span>Consulting Parliamentary Rulebook...</span>
                 </div>
@@ -320,14 +334,14 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
           </div>
 
           {/* Sample question chips */}
-          <div className="p-3 bg-white dark:bg-[#071326] border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto">
+          <div className="p-2.5 sm:p-3 bg-white dark:bg-[#071326] border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto scrollbar-none">
             {sampleQuestions.map((sq, i) => (
               <button
                 key={i}
                 id={`btn-sample-question-${i}`}
                 type="button"
                 onClick={() => handleSendQuestion(sq)}
-                className="px-3 py-1.5 min-h-[36px] rounded-lg bg-slate-100 dark:bg-[#0b1b33] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium whitespace-nowrap transition-colors active:scale-98"
+                className="px-3 py-1.5 min-h-[38px] rounded-lg bg-slate-100 dark:bg-[#0b1b33] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium whitespace-nowrap transition-colors touch-press active:scale-98"
               >
                 {sq}
               </button>
@@ -335,7 +349,7 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
           </div>
 
           {/* Chat input */}
-          <div className="p-4 bg-white dark:bg-[#071326] border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+          <div className="p-3 sm:p-4 bg-white dark:bg-[#071326] border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
             <input
               id="input-rop-chat-query"
               type="text"
@@ -344,18 +358,18 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSendQuestion();
               }}
-              placeholder="Ask a procedural question (e.g., Can I call for a roll call vote?)..."
-              className="flex-1 px-4 py-2.5 min-h-[44px] text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100"
+              placeholder="Ask a procedural question..."
+              className="flex-1 px-4 py-2.5 min-h-[48px] text-base border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] bg-white dark:bg-[#0b1b33] text-slate-800 dark:text-slate-100"
             />
             <button
               id="btn-send-rop-chat"
               onClick={() => handleSendQuestion()}
               disabled={!inputQuestion.trim() || isChatLoading}
-              className="p-3 min-h-[44px] min-w-[44px] flex items-center justify-center bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] rounded-xl shadow-xs transition-all disabled:opacity-40 active:scale-98"
+              className="p-3 min-h-[48px] min-w-[48px] flex items-center justify-center bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] rounded-xl shadow-xs transition-all disabled:opacity-40 touch-press active:scale-98"
               title="Send question"
               aria-label="Send question"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5" />
             </button>
           </div>
         </div>

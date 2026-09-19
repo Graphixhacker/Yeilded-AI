@@ -361,8 +361,10 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
-        Yeilded Diplomatic AI Suite • Secure Delegation Portal
+      <footer className="w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-2">
+        <span>Yeilded Diplomatic AI Suite • Secure Delegation Portal</span>
+        <span className="hidden sm:inline">•</span>
+        <span>Need help? <a href="mailto:support@yeilded.com" className="text-[#0B1F3A] dark:text-[#D4AF37] hover:underline font-medium">support@yeilded.com</a></span>
       </footer>
     </div>
   );

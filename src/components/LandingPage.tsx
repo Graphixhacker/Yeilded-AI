@@ -15,7 +15,8 @@ import {
   Award,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  Mail
 } from 'lucide-react';
 import { Currency } from '../types';
 
@@ -332,8 +333,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span className="text-slate-500">| Designed for International Delegates</span>
           </div>
 
-          <div>
-            Built with UN Rules of Procedure & diplomatic standards.
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-sm">
+            <span>Built with UN Rules of Procedure & diplomatic standards.</span>
+            <span className="hidden sm:inline text-slate-600">|</span>
+            <a
+              href="mailto:support@yeilded.com"
+              className="text-[#D4AF37] hover:underline inline-flex items-center gap-1.5 transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              <span>support@yeilded.com</span>
+            </a>
           </div>
         </div>
       </footer>

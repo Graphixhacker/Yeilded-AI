@@ -16,7 +16,8 @@ import {
   X,
   Clock,
   ShieldAlert,
-  Settings
+  Settings,
+  Mail
 } from 'lucide-react';
 import { User, TabType } from '../types';
 
@@ -358,9 +359,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             href="https://wa.me/923122421899"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-2 px-3 min-h-[40px] text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors flex items-center justify-center gap-1.5 active:scale-98"
+            className="w-full py-1.5 px-3 min-h-[36px] text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors flex items-center justify-center gap-1.5 active:scale-98"
           >
-            <span>Need help? Contact us on WhatsApp</span>
+            <span>Need help? WhatsApp</span>
+          </a>
+
+          <a
+            href="mailto:support@yeilded.com"
+            className="w-full py-1.5 px-3 min-h-[36px] text-xs font-medium text-slate-400 hover:text-[#D4AF37] hover:bg-white/5 rounded-xl transition-colors flex items-center justify-center gap-1.5 active:scale-98"
+          >
+            <Mail className="w-3.5 h-3.5 text-slate-400" />
+            <span>support@yeilded.com</span>
           </a>
 
           {onViewLanding && (

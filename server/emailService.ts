@@ -84,7 +84,7 @@ function buildPasswordResetEmailHtml(name: string, resetLink: string): string {
           <tr>
             <td style="background-color: #081424; padding: 20px 32px; border-top: 1px solid #1e293b; text-align: center;">
               <p style="margin: 0; font-size: 12px; color: #64748b;">
-                Yeilded • Model United Nations Diplomatic AI Suite
+                Yeilded • Model United Nations Diplomatic AI Suite • Need help? Contact <a href="mailto:support@yeilded.com" style="color: #D4AF37; text-decoration: none;">support@yeilded.com</a>
               </p>
             </td>
           </tr>
@@ -143,7 +143,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const secure = parseSmtpSecure(process.env.SMTP_SECURE, port);
-  const fromAddress = process.env.EMAIL_FROM || (user ? `"Yeilded" <${user}>` : 'Yeilded <no-reply@yeilded.ai>');
+  const fromAddress = process.env.EMAIL_FROM || (user ? `"Yeilded" <${user}>` : 'Yeilded <support@yeilded.com>');
 
   if (!host || !user || !pass) {
     console.warn(`[EMAIL SERVICE] SMTP credentials not fully configured (SMTP_HOST, SMTP_USER, or SMTP_PASS missing).`);
@@ -200,7 +200,7 @@ export async function sendPasswordResetEmail(
 ): Promise<SendEmailResult> {
   const cleanEmail = toEmail.trim().toLowerCase();
   const htmlContent = buildPasswordResetEmailHtml(name, resetLink);
-  const textContent = `Hello ${name},\n\nWe received a request to reset your Yeilded password.\n\nPlease visit the following link to choose a new password:\n${resetLink}\n\nThis link expires in 30 minutes.\n\nIf you did not make this request, you can safely ignore this email.\n\n- Yeilded Diplomatic Suite`;
+  const textContent = `Hello ${name},\n\nWe received a request to reset your Yeilded password.\n\nPlease visit the following link to choose a new password:\n${resetLink}\n\nThis link expires in 30 minutes.\n\nIf you did not make this request, you can safely ignore this email.\nIf you need assistance, contact our support team at support@yeilded.com.\n\n- Yeilded Diplomatic Suite`;
 
   // Always log in development/runtime for easy testing & inspection
   console.log(`[PASSWORD RESET] Link generated for ${cleanEmail}: ${resetLink}`);
@@ -211,7 +211,7 @@ export async function sendPasswordResetEmail(
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const secure = parseSmtpSecure(process.env.SMTP_SECURE, port);
-  const fromAddress = process.env.EMAIL_FROM || (user ? `"Yeilded" <${user}>` : 'Yeilded <no-reply@yeilded.ai>');
+  const fromAddress = process.env.EMAIL_FROM || (user ? `"Yeilded" <${user}>` : 'Yeilded <support@yeilded.com>');
 
   if (host && user && pass) {
     try {

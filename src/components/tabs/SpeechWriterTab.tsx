@@ -3,6 +3,8 @@ import { DelegateContext, User, SpeechType, SUPPORTED_LANGUAGES, SupportedLangua
 import { api } from '../../services/api';
 import { exportDocumentToPDF, exportDocumentToWord, copyToClipboard } from '../../utils/exportUtils';
 import { ErrorAlert } from '../ErrorAlert';
+import { SkeletonLoader } from '../SkeletonLoader';
+import { DocumentActionBar } from '../DocumentActionBar';
 import {
   Mic,
   Play,
@@ -372,119 +374,105 @@ export const SpeechWriterTab: React.FC<SpeechWriterTabProps> = ({
               </div>
             </div>
 
-            {/* Generate Action */}
-            <button
-              id="btn-generate-speech"
-              onClick={handleGenerateSpeech}
-              disabled={isGenerating || isLimitBlocked}
-              className="w-full min-h-[44px] py-3 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
-                  <span>DeepSeek Drafting Speech ({estimatedTargetWords} words)...</span>
-                </>
-              ) : isLimitBlocked ? (
-                <>
-                  <Lock className="w-4 h-4 text-amber-400" />
-                  <span>Free Limit Reached — Upgrade to Continue</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
-                  <span>Generate Scaled Speech</span>
-                </>
-              )}
-            </button>
+            {/* Generate Action (Desktop) */}
+            <div className="hidden lg:block pt-1">
+              <button
+                id="btn-generate-speech"
+                onClick={handleGenerateSpeech}
+                disabled={isGenerating || isLimitBlocked}
+                className="w-full min-h-[48px] py-3 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+                    <span>Drafting Speech ({estimatedTargetWords} words)...</span>
+                  </>
+                ) : isLimitBlocked ? (
+                  <>
+                    <Lock className="w-4 h-4 text-amber-400" />
+                    <span>Free Limit Reached — Upgrade to Continue</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
+                    <span>Generate Scaled Speech</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Right Column: Output & Practice Mode */}
         <div className="lg:col-span-7">
-          <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-full min-h-[580px] transition-colors">
+          <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-full min-h-[520px] transition-colors overflow-hidden">
             {/* Output Header */}
-            <div className="p-4 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 dark:bg-[#0b1b33] rounded-t-2xl transition-colors">
-              <div className="flex items-center gap-3">
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 dark:bg-[#0b1b33] transition-colors">
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   Speech Script
                 </span>
                 {speechText && (
                   <span className="text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded font-mono">
-                    {actualWords} words (~{Math.round((actualWords / 130) * 60)}s read time)
+                    {actualWords} words (~{Math.round((actualWords / 130) * 60)}s)
                   </span>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                {speechText && (
+              {speechText && (
+                <div className="flex items-center gap-2">
                   <button
                     id="btn-speech-practice-toggle"
                     onClick={() => {
                       if (!isPracticing) handleStartPractice();
                       else setIsPracticing(false);
                     }}
-                    className={`px-3 py-1.5 min-h-[38px] rounded-lg text-sm font-bold flex items-center gap-1.5 transition-all active:scale-98 ${
+                    className={`px-3 py-1.5 min-h-[38px] rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all touch-press active:scale-98 ${
                       isPracticing
                         ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700'
                         : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
                     }`}
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>{isPracticing ? 'Exit Practice' : 'Practice Mode'}</span>
+                    <span>{isPracticing ? 'Exit Practice' : 'Practice'}</span>
                   </button>
-                )}
 
-                <button
-                  id="btn-speech-copy"
-                  onClick={handleCopy}
-                  disabled={!speechText}
-                  className="px-2.5 py-1.5 min-h-[38px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 active:scale-98"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied' : 'Copy'}</span>
-                </button>
-
-                <button
-                  id="btn-speech-save"
-                  onClick={handleSaveSpeech}
-                  disabled={!speechText}
-                  className="px-2.5 py-1.5 min-h-[38px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 active:scale-98"
-                >
-                  <Save className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{saved ? 'Saved!' : 'Save'}</span>
-                </button>
-
-                <button
-                  id="btn-speech-pdf"
-                  onClick={handleExportPDF}
-                  disabled={!speechText}
-                  className="px-3 py-1.5 min-h-[38px] rounded-lg bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] text-[#D4AF37] text-sm font-bold flex items-center gap-1.5 transition-colors disabled:opacity-40 active:scale-98"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>PDF</span>
-                </button>
-              </div>
+                  <DocumentActionBar
+                    documentTitle={`${context.country} - ${speechType.toUpperCase()} Speech`}
+                    content={speechText}
+                    onExportWord={() => exportDocumentToWord({
+                      title: `${context.country} - ${speechType} Speech`,
+                      country: context.country,
+                      committee: context.committee,
+                      topic: context.topic,
+                      type: 'Speech',
+                      content: speechText
+                    })}
+                    onExportPDF={handleExportPDF}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Practice Mode Live Bar */}
             {isPracticing && (
-              <div className="p-4 bg-[#0B1F3A] text-white flex items-center justify-between border-b border-[#D4AF37]/40 animate-in fade-in">
+              <div className="p-3 sm:p-4 bg-[#0B1F3A] text-white flex items-center justify-between border-b border-[#D4AF37]/40 animate-in fade-in">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`text-2xl font-black font-mono px-3 py-1 rounded-lg ${
+                    className={`text-2xl sm:text-3xl font-black font-mono px-3 py-1.5 rounded-xl ${
                       secondsRemaining <= 10
                         ? 'bg-rose-600 text-white animate-pulse'
                         : secondsRemaining <= 30
                         ? 'bg-amber-500 text-slate-950'
-                        : 'bg-white/10 text-[#D4AF37]'
+                        : 'bg-white/15 text-[#D4AF37]'
                     }`}
                   >
                     {formatTimer(secondsRemaining)}
                   </div>
                   <div>
-                    <span className="text-sm font-bold block">Teleprompter Countdown</span>
-                    <span className="text-xs text-slate-300">
-                      Standard pace: 120–135 words/min
+                    <span className="text-xs sm:text-sm font-bold block">Teleprompter Countdown</span>
+                    <span className="text-[11px] sm:text-xs text-slate-300">
+                      Standard: 125 words/min
                     </span>
                   </div>
                 </div>
@@ -493,63 +481,109 @@ export const SpeechWriterTab: React.FC<SpeechWriterTabProps> = ({
                   <button
                     id="btn-practice-pause-resume"
                     onClick={() => setTimerRunning(!timerRunning)}
-                    className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                    className="p-2.5 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl bg-white/15 hover:bg-white/25 text-white transition-colors touch-press"
                     title={timerRunning ? 'Pause timer' : 'Resume timer'}
                     aria-label={timerRunning ? 'Pause timer' : 'Resume timer'}
                   >
-                    {timerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    {timerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
                   </button>
                   <button
                     id="btn-practice-reset"
                     onClick={handleResetPractice}
-                    className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                    className="p-2.5 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl bg-white/15 hover:bg-white/25 text-white transition-colors touch-press"
                     title="Reset countdown"
                     aria-label="Reset countdown"
                   >
-                    <RotateCcw className="w-4 h-4" />
+                    <RotateCcw className="w-5 h-5" />
                   </button>
                 </div>
               </div>
             )}
 
             {/* Content Area */}
-            <div className="p-4 flex-1 flex flex-col">
+            <div className="p-3 sm:p-4 flex-1 flex flex-col">
               {isGenerating ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center space-y-4">
-                  <div className="w-12 h-12 rounded-full border-3 border-[#0B1F3A] dark:border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin"></div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-base">
-                      Calibrating Diplomatic Speech
-                    </h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                      Pacing rhetoric to exactly {timeLimit} seconds with formal salutations and parliamentary yield...
-                    </p>
-                  </div>
-                </div>
-              ) : speechText ? (
-                <textarea
-                  id="speech-script-textarea"
-                  value={speechText}
-                  onChange={(e) => setSpeechText(e.target.value)}
-                  className={`w-full flex-1 p-5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-[#0b1b33] text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] resize-none leading-relaxed transition-all ${
-                    isPracticing ? 'text-base sm:text-lg tracking-wide bg-amber-50/20 dark:bg-amber-950/20' : 'text-sm'
-                  }`}
-                  placeholder="Your generated speech script..."
+                <SkeletonLoader
+                  title={`Drafting ${context.country} Diplomatic Speech...`}
+                  steps={[
+                    `Analyzing speaker time limit (${timeLimit}s)...`,
+                    `Synthesizing ${tone} diplomatic cadence...`,
+                    'Structuring hook, body arguments & formal yield...',
+                    'Calibrating speech length to 125–135 words/min...'
+                  ]}
                 />
+              ) : speechText ? (
+                <div className="relative flex-1 flex flex-col min-h-[420px]">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100/90 dark:bg-[#0b1b33] border border-b-0 border-slate-200 dark:border-slate-800 rounded-t-xl text-xs text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {isPracticing ? 'Practice Teleprompter Mode' : 'Editable Speech Script'}
+                    </span>
+                    <button
+                      id="btn-speech-save"
+                      onClick={handleSaveSpeech}
+                      className="px-2.5 py-1 min-h-[32px] rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors touch-press"
+                      title="Save to My Archive"
+                    >
+                      <Save className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{saved ? 'Saved!' : 'Save Draft'}</span>
+                    </button>
+                  </div>
+
+                  <textarea
+                    id="speech-script-textarea"
+                    value={speechText}
+                    onChange={(e) => setSpeechText(e.target.value)}
+                    className={`w-full flex-1 p-4 border border-slate-200 dark:border-slate-800 rounded-b-xl bg-white dark:bg-[#0b1b33] text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] resize-none leading-relaxed transition-all ${
+                      isPracticing 
+                        ? 'text-lg sm:text-xl font-medium tracking-wide leading-loose bg-amber-50/15 dark:bg-amber-950/15 text-slate-900 dark:text-amber-50' 
+                        : 'text-base sm:text-[17px]'
+                    }`}
+                    placeholder="Your generated speech script..."
+                  />
+                </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl m-2">
-                  <Mic className="w-12 h-12 stroke-1 text-slate-300 dark:text-slate-600 mb-3" />
+                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl m-2">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-400 mb-3">
+                    <Mic className="w-6 h-6 stroke-[1.5]" />
+                  </div>
                   <p className="font-bold text-slate-700 dark:text-slate-300 text-base">
-                    No Speech Generated Yet
+                    Ready to Write Your Speech
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-                    Select your speech type and time limit on the left to draft a speech tailored for {context.country}.
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1 px-4">
+                    Choose your speech format and time limit on the left to calibrate a diplomatic speech for {context.country}.
                   </p>
                 </div>
               )}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Sticky Primary Action Button (Fixed above bottom tab bar) */}
+      <div className="lg:hidden fixed bottom-[calc(3.75rem+max(env(safe-area-inset-bottom,8px),8px))] left-0 right-0 p-3 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
+        <button
+          id="btn-generate-speech-mobile"
+          onClick={handleGenerateSpeech}
+          disabled={isGenerating || isLimitBlocked}
+          className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 touch-press active:scale-98"
+        >
+          {isGenerating ? (
+            <>
+              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+              <span>Drafting Speech ({estimatedTargetWords} words)...</span>
+            </>
+          ) : isLimitBlocked ? (
+            <>
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>Free Limit Reached — Upgrade</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
+              <span>Generate Scaled Speech</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

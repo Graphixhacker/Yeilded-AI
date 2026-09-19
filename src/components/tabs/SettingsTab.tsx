@@ -178,8 +178,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         </p>
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-base font-mono text-slate-800 dark:text-slate-200">
           <Mail className="w-4 h-4 text-slate-400" />
-          <a href="mailto:yeildedinfo@gmail.com" className="hover:text-blue-500 transition-colors">
-            yeildedinfo@gmail.com
+          <a href="mailto:support@yeilded.com" className="hover:text-blue-500 transition-colors">
+            support@yeilded.com
           </a>
         </div>
       </div>

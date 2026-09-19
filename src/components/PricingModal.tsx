@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserTier, Currency, PricingPlan } from '../types';
-import { X, CheckCircle2, Zap, Shield, Sparkles, Building, Smartphone, CreditCard, Upload } from 'lucide-react';
+import { X, CheckCircle2, Zap, Shield, Sparkles, Building, Smartphone, CreditCard, Upload, Mail } from 'lucide-react';
 import { api } from '../services/api';
 
 interface PricingModalProps {
@@ -234,6 +234,14 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
                   </div>
                 ))}
               </div>
+
+              <div className="mt-8 pt-4 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                <span>Have questions or need institutional delegation licenses?</span>
+                <a href="mailto:support@yeilded.com" className="text-[#0B1F3A] dark:text-[#D4AF37] font-semibold hover:underline inline-flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>support@yeilded.com</span>
+                </a>
+              </div>
             </>
           )}
 
@@ -309,7 +317,7 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
 
                 {paymentGateway === 'whatsapp' && (
                   <div className="space-y-3 text-base text-slate-700 dark:text-slate-300">
-                    <p>For EasyPaisa, SadaPay, Nayapay, or other payment options, please contact us on WhatsApp.</p>
+                    <p>For EasyPaisa, SadaPay, Nayapay, or other payment options, please contact us on WhatsApp or email <a href="mailto:support@yeilded.com" className="text-[#0B1F3A] dark:text-[#D4AF37] font-semibold underline">support@yeilded.com</a>.</p>
                     <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 font-mono text-base shadow-inner flex items-center justify-center">
                       <a 
                         href={`https://wa.me/923122421899?text=Hi!%20I%20want%20to%20buy%20a%20MUN%20Command%20Center%20pass%20(${currentPricingData[selectedTier].price}).`}
@@ -327,7 +335,7 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
                   <div className="flex gap-3 mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 rounded-lg text-sm border border-amber-200 dark:border-amber-800">
                     <Smartphone className="w-5 h-5 shrink-0" />
                     <p className="leading-relaxed">
-                      For manual activation, please send a message on WhatsApp.
+                      For manual activation, please send a message on WhatsApp or email <a href="mailto:support@yeilded.com" className="underline font-bold">support@yeilded.com</a>.
                       Include your registered email address (<strong className="font-bold">{user?.email || 'your email'}</strong>) so we can locate and upgrade your account instantly.
                     </p>
                   </div>

@@ -336,8 +336,8 @@ export default function App() {
               onToggleDarkMode={handleToggleDarkMode}
             />
 
-            {/* Scrollable Active View */}
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+            {/* Scrollable Active View - Mobile-first single-column with 16px side padding */}
+            <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:p-8 pb-32 lg:pb-8 overflow-x-hidden">
               {activeTab === 'position-paper' && (
                 <PositionPaperTab
                   context={delegateContext}
@@ -432,72 +432,85 @@ export default function App() {
               )}
             </main>
 
-            {/* Mobile Bottom Navigation Bar (Visible on mobile/tablet viewports) */}
+            {/* Mobile Bottom Navigation Bar (Visible on mobile viewports with notch safe-area) */}
             <nav 
               id="mobile-bottom-nav"
               aria-label="Mobile Bottom Navigation"
-              className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-around h-16 px-1 shadow-lg"
+              style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}
+              className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-around pt-1 px-1.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]"
             >
               <button
                 id="bottom-nav-paper-btn"
                 onClick={() => setActiveTab('position-paper')}
-                className={`flex-1 min-h-[44px] flex flex-col items-center justify-center py-1 rounded-xl transition-colors ${
+                className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
                   activeTab === 'position-paper'
-                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
+                {activeTab === 'position-paper' && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
+                )}
                 <FileText className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-medium tracking-tight">Paper</span>
+                <span className="text-[10px] tracking-tight">Paper</span>
               </button>
 
               <button
                 id="bottom-nav-speech-btn"
                 onClick={() => setActiveTab('speech-writer')}
-                className={`flex-1 min-h-[44px] flex flex-col items-center justify-center py-1 rounded-xl transition-colors ${
+                className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
                   activeTab === 'speech-writer'
-                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
+                {activeTab === 'speech-writer' && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
+                )}
                 <Mic className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-medium tracking-tight">Speeches</span>
+                <span className="text-[10px] tracking-tight">Speeches</span>
               </button>
 
               <button
                 id="bottom-nav-clauses-btn"
                 onClick={() => setActiveTab('clause-builder')}
-                className={`flex-1 min-h-[44px] flex flex-col items-center justify-center py-1 rounded-xl transition-colors ${
+                className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
                   activeTab === 'clause-builder'
-                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
+                {activeTab === 'clause-builder' && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
+                )}
                 <Layers className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-medium tracking-tight">Clauses</span>
+                <span className="text-[10px] tracking-tight">Clauses</span>
               </button>
 
               <button
                 id="bottom-nav-rop-btn"
                 onClick={() => setActiveTab('rop-assistant')}
-                className={`flex-1 min-h-[44px] flex flex-col items-center justify-center py-1 rounded-xl transition-colors ${
+                className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
                   activeTab === 'rop-assistant'
-                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
+                {activeTab === 'rop-assistant' && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
+                )}
                 <BookOpen className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-medium tracking-tight">RoP</span>
+                <span className="text-[10px] tracking-tight">RoP</span>
               </button>
 
               <button
                 id="bottom-nav-menu-btn"
                 onClick={() => setMobileSidebarOpen(true)}
-                className="flex-1 min-h-[44px] flex flex-col items-center justify-center py-1 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                className="flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all touch-press"
                 aria-label="Open full diplomatic suite menu"
               >
                 <Menu className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-medium tracking-tight">More</span>
+                <span className="text-[10px] tracking-tight">More</span>
               </button>
             </nav>
           </div>
