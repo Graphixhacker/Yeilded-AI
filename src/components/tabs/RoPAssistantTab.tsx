@@ -14,7 +14,9 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Shield
+  Shield,
+  Copy,
+  Check
 } from 'lucide-react';
 
 interface RoPAssistantTabProps {
@@ -38,6 +40,14 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedItemId, setExpandedItemId] = useState<string | null>('point-order');
+  const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+
+  const handleCopyPhrasing = (e: React.MouseEvent, phrasing: string, id: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(phrasing);
+    setCopiedItemId(id);
+    setTimeout(() => setCopiedItemId(null), 2000);
+  };
 
   // Chatbot states
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -109,19 +119,27 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-3 sm:space-y-6 max-w-6xl mx-auto">
       {/* Banner */}
-      <div className="bg-white dark:bg-[#071326] p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+      <div className="bg-white dark:bg-[#071326] p-3 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 transition-colors">
         <div>
-          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
+          {/* Eyebrow: hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
             <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>PARLIAMENTARY RULES OF PROCEDURE</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
-            Rules of Procedure (RoP) Assistant
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Instant parliamentary reference for UNA-USA & THIMUN, plus AI Parliamentarian rulings.
+
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
+              Rules of Procedure
+            </h2>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+              Quick Reference
+            </span>
+          </div>
+
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 truncate sm:whitespace-normal">
+            Instant parliamentary reference for UNA-USA & THIMUN procedures.
           </p>
         </div>
 
@@ -130,7 +148,7 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
           <button
             id="btn-rop-view-cheatsheet"
             onClick={() => setActiveSubView('cheatsheet')}
-            className={`px-3 sm:px-4 py-2 min-h-[42px] text-xs sm:text-sm font-bold rounded-lg transition-all text-center touch-press active:scale-98 ${
+            className={`px-3 sm:px-4 py-2 min-h-[44px] text-xs sm:text-sm font-bold rounded-lg transition-all text-center touch-press active:scale-98 ${
               activeSubView === 'cheatsheet'
                 ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-white dark:text-[#0B1F3A] shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -141,7 +159,7 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
           <button
             id="btn-rop-view-chatbot"
             onClick={() => setActiveSubView('chatbot')}
-            className={`px-3 sm:px-4 py-2 min-h-[42px] text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 text-center touch-press active:scale-98 ${
+            className={`px-3 sm:px-4 py-2 min-h-[44px] text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 text-center touch-press active:scale-98 ${
               activeSubView === 'chatbot'
                 ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-white dark:text-[#0B1F3A] shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -154,9 +172,9 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
       </div>
 
       {activeSubView === 'cheatsheet' ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Filters & Search */}
-          <div className="bg-white dark:bg-[#071326] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
+          <div className="bg-white dark:bg-[#071326] p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
@@ -181,7 +199,7 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
                   key={cat.id}
                   id={`btn-rop-cat-${cat.id}`}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-2 min-h-[40px] rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all touch-press active:scale-98 ${
+                  className={`px-3.5 py-2 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all touch-press active:scale-98 ${
                     selectedCategory === cat.id
                       ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0B1F3A] shadow-xs'
                       : 'bg-slate-100 dark:bg-[#0b1b33] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
@@ -257,13 +275,22 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
                           Delegate Phrasing at Microphone:
                         </span>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigator.clipboard.writeText(item.samplePhrasing);
-                          }}
-                          className="text-xs text-amber-700 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1"
+                          type="button"
+                          onClick={(e) => handleCopyPhrasing(e, item.samplePhrasing, item.id)}
+                          className="min-h-[44px] px-2.5 py-1 text-xs text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1.5 touch-press rounded-lg hover:bg-amber-100/60 dark:hover:bg-amber-900/40"
+                          aria-label="Copy delegate phrasing"
                         >
-                          Copy
+                          {copiedItemId === item.id ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <span className="text-emerald-700 dark:text-emerald-400">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy</span>
+                            </>
+                          )}
                         </button>
                       </div>
                       <p className="italic text-sm sm:text-base text-slate-900 dark:text-slate-100 font-semibold leading-relaxed">

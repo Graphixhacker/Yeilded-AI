@@ -196,24 +196,40 @@ export const SpeechWriterTab: React.FC<SpeechWriterTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-3 sm:space-y-6 max-w-6xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-[#071326] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+      <div className="bg-white dark:bg-[#071326] p-3 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-4 transition-colors">
         <div>
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm uppercase tracking-wider mb-1">
+          {/* Eyebrow: hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm uppercase tracking-wider mb-1">
             <Mic className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>ORATORY & SPEECHWRITING ENGINE</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
-            Diplomatic Speech Writer & Teleprompter
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
-            Generate calibrated MUN speeches scaled to your allocated speaking time with live practice mode and teleprompter timer.
+
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
+              Diplomatic Speech Writer
+            </h2>
+            {/* Inline usage chip next to title */}
+            {isFree ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                {freeLeft}/3 Free
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#D4AF37]/20 text-[#0B1F3A] dark:text-[#D4AF37] border border-[#D4AF37]/50">
+                Unlimited Pass
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs sm:text-base text-slate-500 dark:text-slate-400 mt-1 truncate sm:whitespace-normal">
+            Generate calibrated MUN speeches scaled to your allocated speaking time with live practice mode.
           </p>
         </div>
 
+        {/* Free Tier Tracker Pill: desktop only */}
         {isFree && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center gap-3 shrink-0">
+          <div className="hidden sm:flex bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 items-center gap-3 shrink-0">
             <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 flex items-center justify-center font-bold text-sm">
               {freeLeft}
             </div>
@@ -246,10 +262,10 @@ export const SpeechWriterTab: React.FC<SpeechWriterTabProps> = ({
       )}
 
       {/* Main Form & Speech Viewer */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
         {/* Left Settings */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#071326] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4">
+          <div className="bg-white dark:bg-[#071326] p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 sm:space-y-4 transition-colors">
             <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
               Speech Parameters
             </h3>
@@ -374,13 +390,13 @@ export const SpeechWriterTab: React.FC<SpeechWriterTabProps> = ({
               </div>
             </div>
 
-            {/* Generate Action (Desktop) */}
-            <div className="hidden lg:block pt-1">
+            {/* Generate Action (Full-width, normal button at end of parameters) */}
+            <div className="pt-2">
               <button
                 id="btn-generate-speech"
                 onClick={handleGenerateSpeech}
                 disabled={isGenerating || isLimitBlocked}
-                className="w-full min-h-[48px] py-3 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98"
+                className="w-full min-h-[48px] py-3 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm sm:text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98 touch-press"
               >
                 {isGenerating ? (
                   <>
@@ -557,33 +573,6 @@ export const SpeechWriterTab: React.FC<SpeechWriterTabProps> = ({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Sticky Primary Action Button (Fixed above bottom tab bar) */}
-      <div className="lg:hidden fixed bottom-[calc(3.75rem+max(env(safe-area-inset-bottom,8px),8px))] left-0 right-0 p-3 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
-        <button
-          id="btn-generate-speech-mobile"
-          onClick={handleGenerateSpeech}
-          disabled={isGenerating || isLimitBlocked}
-          className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 touch-press active:scale-98"
-        >
-          {isGenerating ? (
-            <>
-              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
-              <span>Drafting Speech ({estimatedTargetWords} words)...</span>
-            </>
-          ) : isLimitBlocked ? (
-            <>
-              <Lock className="w-4 h-4 text-amber-400" />
-              <span>Free Limit Reached — Upgrade</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
-              <span>Generate Scaled Speech</span>
-            </>
-          )}
-        </button>
       </div>
     </div>
   );

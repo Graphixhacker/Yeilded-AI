@@ -217,11 +217,12 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-3 sm:space-y-6 max-w-6xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-[#071326] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+      <div className="bg-white dark:bg-[#071326] p-3 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-4 transition-colors">
         <div>
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm uppercase tracking-wider mb-1">
+          {/* Eyebrow: hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm uppercase tracking-wider mb-1">
             <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>
               {isPNA
@@ -233,23 +234,37 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                 : 'UN DIPLOMATIC DOCUMENTATION DRAFTER'}
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
-            Position Paper Generator
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
+
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
+              Position Paper Generator
+            </h2>
+            {/* Inline usage chip next to title */}
+            {isFree ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                {freeLeft}/3 Free
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#D4AF37]/20 text-[#0B1F3A] dark:text-[#D4AF37] border border-[#D4AF37]/50">
+                Unlimited Pass
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs sm:text-base text-slate-500 dark:text-slate-400 mt-1 truncate sm:whitespace-normal">
             {isPNA
-              ? 'Draft an authentic Pakistani parliamentary policy brief tailored to constitutional mandates, provincial equity, and statutory legislation.'
+              ? 'Draft an authentic Pakistani parliamentary policy brief tailored to constitutional mandates.'
               : isUNICEF
-              ? 'Draft an official UNICEF Executive Board policy paper anchored in the Convention on the Rights of the Child, humanitarian access, and field programs.'
+              ? 'Draft an official UNICEF Executive Board policy paper anchored in child welfare.'
               : isINTERPOL
-              ? 'Draft an INTERPOL law enforcement dossier with operational threat assessments, I-24/7 intelligence, and cross-border police protocols.'
-              : 'Draft an official four-section MUN position paper formatted with formal UN conventions, citations, and strategic sovereign proposals.'}
+              ? 'Draft an INTERPOL law enforcement dossier with operational threat assessments.'
+              : 'Draft an official four-section MUN position paper formatted with formal UN conventions.'}
           </p>
         </div>
 
-        {/* Free Tier Tracker Pill */}
+        {/* Free Tier Tracker Pill: desktop only */}
         {isFree && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center gap-3 shrink-0">
+          <div className="hidden sm:flex bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 items-center gap-3 shrink-0">
             <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 flex items-center justify-center font-bold text-sm">
               {freeLeft}
             </div>
@@ -282,10 +297,10 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
       )}
 
       {/* Main Grid: Inputs on Left, Output on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
         {/* Left Column: Context & Input Form */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#071326] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4">
+          <div className="bg-white dark:bg-[#071326] p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 sm:space-y-4 transition-colors">
             <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center justify-between">
               <span>Delegation & Committee Setup</span>
               <span className="text-xs font-normal text-slate-400">Customizable</span>
@@ -487,13 +502,13 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
               )}
             </div>
 
-            {/* Desktop Action Button */}
-            <div className="hidden lg:block pt-1">
+            {/* Primary Action Button (Normal full-width at end of form, not sticky) */}
+            <div className="pt-2">
               <button
                 id="btn-generate-position-paper"
                 onClick={handleGenerate}
                 disabled={isGenerating || isLimitBlocked}
-                className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98"
+                className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm sm:text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 active:scale-98 touch-press"
               >
                 {isGenerating ? (
                   <>
@@ -666,41 +681,6 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Sticky Primary Action Button (Fixed above bottom tab bar) */}
-      <div className="lg:hidden fixed bottom-[calc(3.75rem+max(env(safe-area-inset-bottom,8px),8px))] left-0 right-0 p-3 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
-        <button
-          id="btn-generate-position-paper-mobile"
-          onClick={handleGenerate}
-          disabled={isGenerating || isLimitBlocked}
-          className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 touch-press active:scale-98"
-        >
-          {isGenerating ? (
-            <>
-              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
-              <span>Drafting Position Paper...</span>
-            </>
-          ) : isLimitBlocked ? (
-            <>
-              <Lock className="w-4 h-4 text-amber-400" />
-              <span>Upgrade for Unlimited Papers</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
-              <span>
-                {isPNA
-                  ? 'Draft Parliamentary Brief'
-                  : isUNICEF
-                  ? 'Draft UNICEF Paper'
-                  : isINTERPOL
-                  ? 'Draft Law Enforcement Dossier'
-                  : 'Draft Position Paper'}
-              </span>
-            </>
-          )}
-        </button>
       </div>
 
       {/* Mobile Bottom Sheet for Committee Selection */}

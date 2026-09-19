@@ -19,7 +19,8 @@ import {
   Settings,
   Mail
 } from 'lucide-react';
-import { User, TabType } from '../types';
+import { User, TabType, DelegateContext, Currency, SupportedLanguage, SUPPORTED_LANGUAGES } from '../types';
+import { Sun, Moon, Languages, DollarSign } from 'lucide-react';
 
 export type ActiveTab = TabType;
 
@@ -34,6 +35,13 @@ interface SidebarProps {
   onCloseMobile?: () => void;
   onToggleMobile?: () => void;
   onViewLanding?: () => void;
+  context?: DelegateContext;
+  onUpdateContext?: (ctx: Partial<DelegateContext>) => void;
+  onOpenContextModal?: () => void;
+  isDarkMode?: boolean;
+  onToggleDarkMode?: () => void;
+  currency?: Currency;
+  onToggleCurrency?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -46,7 +54,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpenMobile,
   onCloseMobile,
   onToggleMobile,
-  onViewLanding
+  onViewLanding,
+  context,
+  onUpdateContext,
+  onOpenContextModal,
+  isDarkMode,
+  onToggleDarkMode,
+  currency,
+  onToggleCurrency
 }) => {
   const isDrawerOpen = isMobileOpen ?? isOpenMobile ?? false;
   
@@ -210,6 +225,86 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Mobile Delegation & Preference Switchers (lives in hamburger menu & More tab) */}
+        {context && (
+          <div className="px-3 pt-2 pb-1 space-y-2 border-b border-slate-800/80">
+            {/* Delegation Switcher */}
+            <button
+              id="sidebar-delegate-switcher-btn"
+              onClick={() => {
+                if (onOpenContextModal) onOpenContextModal();
+                handleClose();
+              }}
+              className="w-full p-2.5 rounded-xl bg-[#122847] hover:bg-[#18345b] border border-[#D4AF37]/30 text-left flex items-center justify-between min-h-[44px] transition-colors"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-[#0B1F3A] text-[#D4AF37] flex items-center justify-center font-black text-xs shrink-0 border border-[#D4AF37]/40">
+                  {context.country.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-white truncate block">
+                      {context.country}
+                    </span>
+                    <span className="text-[9px] uppercase font-bold px-1 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800 shrink-0">
+                      {context.committee}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 truncate">
+                    {context.topic}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
+            </button>
+
+            {/* Quick Preference Controls: Theme, Currency, Language */}
+            <div className="grid grid-cols-3 gap-1.5">
+              {onToggleDarkMode && (
+                <button
+                  id="sidebar-theme-toggle"
+                  onClick={onToggleDarkMode}
+                  className="flex items-center justify-center gap-1.5 p-2 min-h-[40px] rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                  title="Toggle theme"
+                >
+                  {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
+                  <span>{isDarkMode ? 'Dark' : 'Light'}</span>
+                </button>
+              )}
+
+              {onToggleCurrency && currency && (
+                <button
+                  id="sidebar-currency-toggle"
+                  onClick={onToggleCurrency}
+                  className="flex items-center justify-center gap-1 p-2 min-h-[40px] rounded-lg bg-slate-800/80 hover:bg-slate-700 text-[#D4AF37] text-xs font-bold transition-colors"
+                  title="Toggle currency"
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>{currency}</span>
+                </button>
+              )}
+
+              {onUpdateContext && (
+                <div className="relative">
+                  <select
+                    id="sidebar-language-select"
+                    value={context.language || 'English'}
+                    onChange={(e) => onUpdateContext({ language: e.target.value as SupportedLanguage })}
+                    className="w-full p-2 min-h-[40px] rounded-lg bg-slate-800/80 text-slate-200 text-xs font-semibold border-none appearance-none text-center cursor-pointer"
+                    title="Change language"
+                  >
+                    {SUPPORTED_LANGUAGES.map((l) => (
+                      <option key={l.id} value={l.id} className="bg-slate-900 text-white">
+                        {l.flag} {l.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Subscription / Pass Banner in Sidebar */}
         <div id="sidebar-tier-card" className="p-4 mx-3 my-3 rounded-xl bg-gradient-to-br from-[#122847] to-[#0D2039] border border-[#D4AF37]/30 shadow-inner">

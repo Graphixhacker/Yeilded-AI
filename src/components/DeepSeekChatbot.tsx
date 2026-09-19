@@ -9,6 +9,7 @@ interface ChatMessage {
 
 export const DeepSeekChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'assistant', content: 'Hello! I am your AI assistant powered by DeepSeek. How can I help you today?' }
   ]);
@@ -25,6 +26,41 @@ export const DeepSeekChatbot: React.FC = () => {
       scrollToBottom();
     }
   }, [messages, isOpen]);
+
+  // Hide floating button while keyboard is open to avoid overlapping inputs
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+        setIsKeyboardOpen(true);
+      }
+    };
+
+    const handleFocusOut = () => {
+      setIsKeyboardOpen(false);
+    };
+
+    const handleViewportResize = () => {
+      if (window.visualViewport) {
+        const isShrunk = window.visualViewport.height < window.innerHeight * 0.75;
+        setIsKeyboardOpen(isShrunk);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+    }
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
+      }
+    };
+  }, []);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,17 +98,25 @@ export const DeepSeekChatbot: React.FC = () => {
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button: 44px, bottom-right, 16px above the tab bar, hides when keyboard open */}
       <button
+        id="btn-deepseek-chat-toggle"
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 lg:bottom-6 right-6 p-4 rounded-full bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] shadow-2xl transition-all duration-300 z-[9999] flex items-center justify-center ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
-        aria-label="Open AI Chat"
+        className={`fixed bottom-[calc(3.5rem+16px+env(safe-area-inset-bottom,0px))] sm:bottom-6 right-4 sm:right-6 w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] shadow-xl border border-[#D4AF37]/40 transition-all duration-200 z-40 flex items-center justify-center active:scale-95 touch-press ${
+          isOpen || isKeyboardOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
+        }`}
+        aria-label="Open AI Diplomatic Chat"
       >
-        <MessageSquare className="w-6 h-6" />
+        <MessageSquare className="w-5 h-5" />
       </button>
 
-      {/* Chat Window */}
-      <div className={`fixed bottom-20 lg:bottom-6 right-4 left-4 sm:left-auto sm:right-6 w-auto sm:w-full max-w-none sm:max-w-[400px] sm:max-w-[400px] bg-white dark:bg-[#0c1c33] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col z-[9999] transition-all duration-300 origin-bottom-right overflow-hidden ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`} style={{ height: '500px', maxHeight: 'calc(100vh - 100px)' }}>
+      {/* Chat Window: bottom sheet on mobile, floating card on desktop */}
+      <div
+        id="deepseek-chat-window"
+        className={`fixed inset-x-0 bottom-0 sm:inset-x-auto sm:bottom-6 sm:right-6 w-full sm:w-[400px] h-[85vh] sm:h-[520px] max-h-[85vh] bg-white dark:bg-[#0c1c33] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 origin-bottom sm:origin-bottom-right overflow-hidden ${
+          isOpen ? 'translate-y-0 sm:scale-100 opacity-100' : 'translate-y-full sm:translate-y-0 sm:scale-0 opacity-0 pointer-events-none'
+        }`}
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-[#0B1F3A] text-white border-b border-slate-800 shrink-0">

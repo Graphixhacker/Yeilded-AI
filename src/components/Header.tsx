@@ -130,17 +130,21 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Brand Crest on Mobile */}
+        {/* Brand Crest & Logo */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-[#0B1F3A] to-[#15345d] text-[#D4AF37] flex items-center justify-center font-black text-xs sm:text-sm shadow-xs border border-[#D4AF37]/40">
             Y
           </div>
+          <span className="font-display font-bold text-base sm:text-lg text-[#0B1F3A] dark:text-white tracking-tight">
+            Yeilded
+          </span>
         </div>
 
+        {/* Delegate Context Pill (Desktop only - mobile accesses via More tab & Hamburger) */}
         <button
           id="delegate-context-pill-btn"
           onClick={() => setShowContextModal(true)}
-          className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0c1c33] hover:bg-slate-100 dark:hover:bg-[#102442] hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left min-w-0 max-w-[130px] xs:max-w-[190px] sm:max-w-none min-h-[44px]"
+          className="hidden sm:flex group items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0c1c33] hover:bg-slate-100 dark:hover:bg-[#102442] hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left min-w-0 max-w-[130px] xs:max-w-[190px] sm:max-w-none min-h-[44px]"
           title="Click to change your delegate country or committee"
         >
           <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-[#0B1F3A] text-[#D4AF37] flex items-center justify-center font-black text-xs sm:text-sm shadow-xs border border-[#D4AF37]/30">
@@ -225,13 +229,13 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Dark Mode Toggle Button */}
+        {/* Dark Mode Toggle Button (Desktop only - mobile accesses via More tab & Hamburger) */}
         {onToggleDarkMode && (
           <button
             id="theme-toggle-btn"
             onClick={onToggleDarkMode}
             aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-[#D4AF37] hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all flex items-center justify-center"
+            className="hidden sm:flex min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-[#D4AF37] hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all items-center justify-center"
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode for late-night caucus'}
           >
             {isDarkMode ? (
@@ -242,19 +246,19 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Currency Switcher */}
+        {/* Currency Switcher (Desktop only - mobile accesses via More tab) */}
         <button
           id="currency-toggle-btn"
           onClick={onToggleCurrency}
-          className="hidden xs:flex items-center gap-1 px-2.5 py-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 min-h-[44px]"
+          className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 min-h-[44px]"
           title="Toggle pricing currency between PKR and USD"
         >
           <span className="text-xs text-slate-500 dark:text-slate-400">CURR:</span>
           <span className="font-bold text-[#0B1F3A] dark:text-[#D4AF37]">{currency}</span>
         </button>
 
-        {/* Answer Language Switcher */}
-        <div className="relative">
+        {/* Answer Language Switcher (Desktop only - mobile accesses via More tab) */}
+        <div className="relative hidden sm:block">
           <button
             id="language-switcher-btn"
             onClick={() => setShowLangMenu(!showLangMenu)}
@@ -305,8 +309,10 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Pass Status Badge */}
-        {getPassBadge()}
+        {/* Pass Status Badge (Desktop only) */}
+        <div className="hidden sm:flex items-center">
+          {getPassBadge()}
+        </div>
 
         {/* Upgrade button if on free tier */}
         {(!user || user.tier === 'free') && (

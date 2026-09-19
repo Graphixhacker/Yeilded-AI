@@ -172,7 +172,7 @@ export type TabType =
   | 'crisis-simulator'
   | 'debate-practice'
   | 'archives'
-  | 'pricing' | 'admin' | 'settings';
+  | 'pricing' | 'admin' | 'settings' | 'more';
 
 export interface DebateTurn {
   speaker: 'user' | 'opponent' | 'chair';

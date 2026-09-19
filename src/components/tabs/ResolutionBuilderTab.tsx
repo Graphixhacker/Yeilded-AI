@@ -66,7 +66,17 @@ export const ResolutionBuilderTab: React.FC<ResolutionBuilderTabProps> = ({
   const [clauseContent, setClauseContent] = useState<string>('');
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedClauseId, setCopiedClauseId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleCopyClause = async (clause: ResolutionClause) => {
+    const fullText = `${clause.starter} ${clause.text}`;
+    const ok = await copyToClipboard(fullText);
+    if (ok) {
+      setCopiedClauseId(clause.id);
+      setTimeout(() => setCopiedClauseId(null), 2000);
+    }
+  };
 
   // Add a clause manually
   const handleAddClause = () => {
@@ -189,19 +199,27 @@ ${operativeClauses
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-3 sm:space-y-6 max-w-6xl mx-auto">
       {/* Banner */}
-      <div className="bg-white dark:bg-[#071326] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+      <div className="bg-white dark:bg-[#071326] p-3 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-4 transition-colors">
         <div>
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm uppercase tracking-wider mb-1">
+          {/* Eyebrow: hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm uppercase tracking-wider mb-1">
             <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>RESOLUTION DRAFTING SUITE</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
-            Resolution Clause Builder
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
-            Build formal draft resolutions with committee-tailored preambulatory and operative starters, AI clause suggestions, and clause reordering.
+
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white tracking-tight">
+              Resolution Clause Builder
+            </h2>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#D4AF37]/20 text-[#0B1F3A] dark:text-[#D4AF37] border border-[#D4AF37]/50">
+              {clauses.length} {clauses.length === 1 ? 'Clause' : 'Clauses'}
+            </span>
+          </div>
+
+          <p className="text-xs sm:text-base text-slate-500 dark:text-slate-400 mt-1 truncate sm:whitespace-normal">
+            Build formal draft resolutions with committee starters and clause drafting.
           </p>
         </div>
 
@@ -210,7 +228,7 @@ ${operativeClauses
             id="btn-ai-suggest-clauses"
             onClick={handleAISuggestClauses}
             disabled={isSuggesting}
-            className="px-4 py-2.5 min-h-[44px] bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-sm rounded-xl shadow-xs transition-all flex items-center gap-2 border border-[#D4AF37]/30 active:scale-98"
+            className="w-full sm:w-auto px-3.5 py-2.5 min-h-[44px] bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#0f2a4a] dark:hover:bg-[#153863] text-[#D4AF37] font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 active:scale-98 touch-press"
           >
             {isSuggesting ? (
               <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
@@ -227,20 +245,20 @@ ${operativeClauses
       )}
 
       {/* Grid: Creator on Top / Left, Active Resolution on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
         {/* Clause Input Form */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#071326] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4">
+          <div className="bg-white dark:bg-[#071326] p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 sm:space-y-4 transition-colors">
             <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
               Add New Clause
             </h3>
 
-            {/* Type Switcher */}
+            {/* Type Switcher as horizontal pill row */}
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Clause Category
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex gap-2">
                 <button
                   id="btn-clause-type-preambulatory"
                   type="button"
@@ -248,14 +266,13 @@ ${operativeClauses
                     setClauseType('preambulatory');
                     setSelectedStarter('Deeply concerned');
                   }}
-                  className={`p-3 min-h-[44px] rounded-xl border text-center text-sm font-bold transition-all ${
+                  className={`flex-1 p-2.5 min-h-[44px] rounded-xl border text-center text-xs sm:text-sm font-bold transition-all touch-press ${
                     clauseType === 'preambulatory'
                       ? 'bg-amber-50 dark:bg-amber-950/40 border-[#D4AF37] text-amber-900 dark:text-amber-300 ring-2 ring-[#D4AF37]/20'
                       : 'bg-white dark:bg-[#0b1b33] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span className="italic">Preambulatory</span>
-                  <span className="block text-xs font-normal text-slate-400 dark:text-slate-500 mt-0.5">Context & citations (ends in ,)</span>
                 </button>
 
                 <button
@@ -265,14 +282,13 @@ ${operativeClauses
                     setClauseType('operative');
                     setSelectedStarter('Calls upon');
                   }}
-                  className={`p-3 min-h-[44px] rounded-xl border text-center text-sm font-bold transition-all ${
+                  className={`flex-1 p-2.5 min-h-[44px] rounded-xl border text-center text-xs sm:text-sm font-bold transition-all touch-press ${
                     clauseType === 'operative'
                       ? 'bg-blue-50 dark:bg-blue-950/40 border-[#0B1F3A] dark:border-[#D4AF37] text-[#0B1F3A] dark:text-[#D4AF37] ring-2 ring-[#0B1F3A]/20 dark:ring-[#D4AF37]/30'
                       : 'bg-white dark:bg-[#0b1b33] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span className="underline decoration-2">Operative</span>
-                  <span className="block text-xs font-normal text-slate-400 dark:text-slate-500 mt-0.5">Actions & mandates (ends in ;)</span>
                 </button>
               </div>
             </div>
@@ -376,66 +392,83 @@ ${operativeClauses
                 {clauses.map((clause, index) => (
                   <div
                     key={clause.id}
-                    className={`p-3.5 sm:p-4 rounded-xl border transition-all flex items-start justify-between gap-2.5 sm:gap-3 ${
+                    className={`p-3 sm:p-4 rounded-xl border transition-all flex flex-col gap-2 ${
                       clause.type === 'preambulatory'
                         ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40 hover:border-amber-300'
                         : 'bg-blue-50/30 dark:bg-blue-950/20 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700'
                     }`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                            clause.type === 'preambulatory'
-                              ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200'
-                              : 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
-                          }`}
-                        >
-                          {clause.type === 'preambulatory' ? 'Preambulatory' : `Operative #${operativeClauses.findIndex(c => c.id === clause.id) + 1}`}
-                        </span>
-                      </div>
-                      <p className="text-base sm:text-[17px] leading-relaxed text-slate-800 dark:text-slate-200">
-                        <span
-                          className={
-                            clause.type === 'preambulatory'
-                              ? 'italic font-bold text-amber-900 dark:text-amber-300 mr-1.5'
-                              : 'underline font-bold text-[#0B1F3A] dark:text-[#D4AF37] mr-1.5'
-                          }
-                        >
-                          {clause.starter}
-                        </span>
-                        <span>{clause.text}</span>
-                      </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                          clause.type === 'preambulatory'
+                            ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200'
+                            : 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
+                        }`}
+                      >
+                        {clause.type === 'preambulatory' ? 'Preambulatory' : `Operative #${operativeClauses.findIndex(c => c.id === clause.id) + 1}`}
+                      </span>
                     </div>
 
-                    {/* Controls: Up, Down, Delete with 44px+ touch targets */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => moveClause(index, 'up')}
-                        disabled={index === 0}
-                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-25 touch-press"
-                        title="Move up"
-                        aria-label="Move clause up"
+                    {/* Full width text */}
+                    <p className="text-base sm:text-[17px] leading-relaxed text-slate-800 dark:text-slate-200 break-words">
+                      <span
+                        className={
+                          clause.type === 'preambulatory'
+                            ? 'italic font-bold text-amber-900 dark:text-amber-300 mr-1.5'
+                            : 'underline font-bold text-[#0B1F3A] dark:text-[#D4AF37] mr-1.5'
+                        }
                       >
-                        <ChevronUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => moveClause(index, 'down')}
-                        disabled={index === clauses.length - 1}
-                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-25 touch-press"
-                        title="Move down"
-                        aria-label="Move clause down"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteClause(clause.id)}
-                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 touch-press"
-                        title="Delete clause"
-                        aria-label="Delete clause"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        {clause.starter}
+                      </span>
+                      <span>{clause.text}</span>
+                    </p>
+
+                    {/* Small action row at bottom: Up, Down, Copy, Delete as icons */}
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => moveClause(index, 'up')}
+                          disabled={index === 0}
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-25 touch-press"
+                          title="Move up"
+                          aria-label="Move clause up"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => moveClause(index, 'down')}
+                          disabled={index === clauses.length - 1}
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 disabled:opacity-25 touch-press"
+                          title="Move down"
+                          aria-label="Move clause down"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleCopyClause(clause)}
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-[#0B1F3A] dark:hover:text-[#D4AF37] hover:bg-slate-200/60 dark:hover:bg-slate-800 touch-press"
+                          title="Copy clause"
+                          aria-label="Copy clause text"
+                        >
+                          {copiedClauseId === clause.id ? (
+                            <Check className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => deleteClause(clause.id)}
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 touch-press"
+                          title="Delete clause"
+                          aria-label="Delete clause"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -443,28 +476,6 @@ ${operativeClauses
             )}
           </div>
         </div>
-      </div>
-
-      {/* Mobile Sticky Action Bar */}
-      <div className="lg:hidden fixed bottom-[calc(3.75rem+max(env(safe-area-inset-bottom,8px),8px))] left-0 right-0 p-3 bg-white/95 dark:bg-[#071326]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
-        <button
-          id="btn-ai-suggest-clauses-mobile"
-          onClick={handleAISuggestClauses}
-          disabled={isSuggesting}
-          className="w-full min-h-[48px] py-3 px-4 bg-[#0B1F3A] dark:bg-[#0f2a4a] text-[#D4AF37] font-bold text-base rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30 disabled:opacity-50 touch-press active:scale-98"
-        >
-          {isSuggesting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
-              <span>Generating AI Clauses...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 fill-[#D4AF37]" />
-              <span>AI Suggest Clauses ({context.country})</span>
-            </>
-          )}
-        </button>
       </div>
     </div>
   );
