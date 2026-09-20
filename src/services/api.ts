@@ -50,18 +50,46 @@ export async function request(endpoint: string, options: RequestInit = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api${endpoint}`, {
-    ...options,
-    headers
-  });
+  let res: Response;
+  try {
+    res = await fetch(`/api${endpoint}`, {
+      ...options,
+      headers
+    });
+  } catch (netErr: any) {
+    throw {
+      status: 0,
+      message: 'Network error: Unable to connect to server. Please check your connection.',
+      code: 'NETWORK_ERROR'
+    };
+  }
 
-  const data = await res.json().catch(() => ({}));
+  let data: any = {};
+  try {
+    const text = await res.text();
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = {};
+  }
+
   if (!res.ok) {
+    const message = data.error || data.message || (
+      res.status === 401 ? 'Invalid email or password' :
+      res.status === 409 ? 'An account with this email already exists' :
+      res.status === 403 ? (data.error || 'Access restricted') :
+      res.status === 400 ? (data.error || 'Invalid request details') :
+      res.status === 404 ? 'Resource not found' :
+      res.status >= 500 ? 'Server temporarily unavailable. Please try again.' :
+      'Server request failed'
+    );
     throw {
       status: res.status,
-      message: data.error || 'Server request failed',
+      message,
       code: data.code,
-      isFreeTierLimit: data.isFreeTierLimit
+      isFreeTierLimit: data.isFreeTierLimit,
+      isChatLimitReached: data.isChatLimitReached,
+      requireAuth: data.requireAuth,
+      remaining: data.remaining
     };
   }
 
@@ -220,5 +248,17 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ feature, payload })
     });
+  },
+
+  // AI Chat
+  async chat(messages: { role: string; content: string }[]): Promise<{ reply: string; remaining: number | 'unlimited'; count?: number }> {
+    return request('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ messages })
+    });
+  },
+
+  async getChatUsage(): Promise<{ remaining: number | 'unlimited'; count: number; limit: number | 'unlimited'; isFree: boolean; isChatLimitReached: boolean }> {
+    return request('/chat/usage');
   }
 };

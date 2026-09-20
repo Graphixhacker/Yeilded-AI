@@ -3,7 +3,7 @@ import { DelegateContext, User, Currency, TabType } from './types';
 import { api } from './services/api';
 
 // Icons for mobile bottom nav
-import { FileText, Mic, Layers, BookOpen, Menu } from 'lucide-react';
+import { FileText, Mic, Layers, BookOpen, Menu, MessageSquare } from 'lucide-react';
 
 // Components
 import { Header } from './components/Header';
@@ -20,10 +20,10 @@ import { PositionPaperTab } from './components/tabs/PositionPaperTab';
 import { SpeechWriterTab } from './components/tabs/SpeechWriterTab';
 import { ResolutionBuilderTab } from './components/tabs/ResolutionBuilderTab';
 import { RoPAssistantTab } from './components/tabs/RoPAssistantTab';
+import { ChatTab } from './components/tabs/ChatTab';
 import { PolicyResearchTab } from './components/tabs/PolicyResearchTab';
 import { CrisisSimulatorTab } from './components/tabs/CrisisSimulatorTab';
 import { DebatePracticeTab } from './components/tabs/DebatePracticeTab';
-import { DeepSeekChatbot } from './components/DeepSeekChatbot';
 import { SettingsTab } from './components/tabs/SettingsTab';
 import { ArchivesTab } from './components/tabs/ArchivesTab';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -149,9 +149,11 @@ export default function App() {
             handleSetUser(res.user);
           }
         })
-        .catch(() => {
-          localStorage.removeItem('mun_auth_token');
-          handleSetUser(null);
+        .catch((err) => {
+          if (err && err.status === 401) {
+            localStorage.removeItem('mun_auth_token');
+            handleSetUser(null);
+          }
         });
     }
 
@@ -378,6 +380,15 @@ export default function App() {
                 />
               )}
 
+              {activeTab === 'chat' && (
+                <ChatTab
+                  context={delegateContext}
+                  user={user}
+                  onOpenAuth={handleOpenAuth}
+                  onOpenPricing={() => setIsPricingOpen(true)}
+                />
+              )}
+
               {activeTab === 'policy-research' && (
                 <PolicyResearchTab
                   context={delegateContext}
@@ -488,6 +499,22 @@ export default function App() {
               </button>
 
               <button
+                id="bottom-nav-chat-btn"
+                onClick={() => setActiveTab('chat')}
+                className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
+                  activeTab === 'chat'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                {activeTab === 'chat' && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
+                )}
+                <MessageSquare className="w-5 h-5 mb-0.5" />
+                <span className="text-[10px] tracking-tight">Chat</span>
+              </button>
+
+              <button
                 id="bottom-nav-rop-btn"
                 onClick={() => setActiveTab('rop-assistant')}
                 className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
@@ -569,8 +596,6 @@ export default function App() {
         onToggleCurrency={handleToggleCurrency}
         onPassActivated={handlePassActivated}
       />
-      {/* DeepSeek Chatbot Floating Widget */}
-      <DeepSeekChatbot />
     </div>
   );
 }

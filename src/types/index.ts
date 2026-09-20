@@ -13,6 +13,11 @@ export interface User {
     date: string; // YYYY-MM-DD
     count: number;
   };
+  chatUsage?: {
+    date: string; // YYYY-MM-DD
+    count: number;
+    lifetimeCount?: number;
+  };
   createdAt: string;
 }
 
@@ -164,6 +169,7 @@ export interface DebateExchange {
 }
 
 export type TabType =
+  | 'chat'
   | 'position-paper'
   | 'speech-writer'
   | 'clause-builder'

@@ -7,6 +7,21 @@ import { callDeepSeekOrFallback, callDeepSeekChat } from './aiService.ts';
 
 export const apiRouter = express.Router();
 
+// CORS & Preflight headers for cross-origin and iframe environments
+apiRouter.use((req: any, res: any, next: express.NextFunction) => {
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', (req.headers.origin as string) || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 // Ensure standard Express response methods exist even when mounted inside Connect/Vite
 apiRouter.use((req: any, res: any, next: express.NextFunction) => {
   if (typeof res.status !== 'function') {
@@ -142,66 +157,105 @@ apiRouter.post('/user/profile', (req: Request, res: Response) => {
 });
 
 
-// --- CHATBOT ENDPOINT ---
-apiRouter.post('/chat', authenticate, async (req: any, res: any) => {
+// --- CHATBOT ENDPOINTS ---
+apiRouter.get('/chat/usage', (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const usage = db.getChatUsage(user?.id);
+  res.json(usage);
+});
+
+apiRouter.post('/chat', async (req: any, res: any) => {
   try {
     const { messages } = req.body;
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
     
-    // Check if user is authenticated (can be optional or required based on tier)
-    // We will allow anyone to chat, or you can restrict. Let's allow but maybe rate limit later.
+    const user = req.user;
+    const usage = db.checkAndIncrementChatUsage(user?.id);
+    if (!usage.allowed) {
+      return res.status(403).json({
+        error: usage.reason || 'Chat limit reached',
+        isChatLimitReached: usage.isChatLimitReached || false,
+        requireAuth: usage.requireAuth || false,
+        remaining: usage.remaining
+      });
+    }
+
     const reply = await callDeepSeekChat(messages);
-    res.json({ reply });
+    res.json({
+      reply,
+      remaining: usage.remaining,
+      count: usage.count
+    });
   } catch (err: any) {
-    console.error('Chat error:', err);
-    res.status(500).json({ error: 'Failed to process chat' });
+    console.error('[CHAT ERROR]', err);
+    res.status(500).json({
+      error: 'Chat is temporarily unavailable, please try again.',
+      reply: 'Chat is temporarily unavailable, please try again.'
+    });
   }
 });
 
 // --- AUTH ENDPOINTS ---
 apiRouter.post('/auth/register', (req: Request, res: Response) => {
-  const { email, name, password, affiliateCode } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
+  try {
+    const { email, name, password, affiliateCode } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanPass = String(password);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+
+    if (cleanPass.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    const existing = db.getUserByEmail(cleanEmail);
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
+    }
+
+    const delegateName = name ? String(name).trim() : cleanEmail.split('@')[0];
+    const { user, token } = db.createUser(cleanEmail, delegateName, cleanPass, affiliateCode);
+    console.log(`[AUTH] Successfully registered new user: ${cleanEmail} (${user.id})`);
+    res.json({ user, token });
+  } catch (err: any) {
+    console.error('[AUTH REGISTER ERROR]', err);
+    res.status(500).json({ error: 'Unable to create account. Please try again.' });
   }
-
-  const cleanEmail = String(email).trim().toLowerCase();
-  const cleanPass = String(password);
-
-  if (cleanPass.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-  }
-
-  const existing = db.getUserByEmail(cleanEmail);
-  if (existing) {
-    return res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
-  }
-
-  const { user, token } = db.createUser(cleanEmail, name ? String(name).trim() : cleanEmail.split('@')[0], cleanPass, affiliateCode);
-  res.json({ user, token });
 });
 
 apiRouter.post('/auth/login', (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
-  const cleanEmail = String(email).trim().toLowerCase();
-  const user = db.getUserByEmail(cleanEmail);
-  if (!user || !db.verifyPassword(user.id, String(password))) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
+    const cleanEmail = String(email).trim().toLowerCase();
+    const user = db.getUserByEmail(cleanEmail);
+    if (!user || !db.verifyPassword(user.id, String(password))) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
 
-  
-  if ((user as any).banned) {
-    return res.status(403).json({ error: 'This account has been suspended.' });
-  }
+    if ((user as any).banned) {
+      return res.status(403).json({ error: 'This account has been suspended. Please contact support.' });
+    }
 
-  const token = db.createTokenForUser(user.id);
-  res.json({ user, token });
+    const token = db.createTokenForUser(user.id);
+    console.log(`[AUTH] User logged in: ${cleanEmail} (${user.id})`);
+    res.json({ user, token });
+  } catch (err: any) {
+    console.error('[AUTH LOGIN ERROR]', err);
+    res.status(500).json({ error: 'Unable to sign in. Please try again.' });
+  }
 });
 
 // Rate limiter for password reset: max 3 requests per email/IP per hour

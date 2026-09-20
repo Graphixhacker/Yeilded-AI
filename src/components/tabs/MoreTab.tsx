@@ -18,7 +18,8 @@ import {
   MessageCircle, 
   Check, 
   ShieldAlert,
-  ChevronDown
+  ChevronDown,
+  MessageSquare
 } from 'lucide-react';
 import { 
   User, 
@@ -295,6 +296,7 @@ export const MoreTab: React.FC<MoreTabProps> = ({
         </h3>
 
         {[
+          { id: 'chat', label: 'AI Diplomatic Chat', desc: 'Real-time DeepSeek MUN advice & tactics', icon: MessageSquare },
           { id: 'policy-research', label: 'Policy Research Dossier', desc: 'Country dossiers, red lines & leverage', icon: Globe },
           { id: 'crisis-simulator', label: 'Crisis Directive Simulator', desc: 'Backroom covert actions & feedback', icon: Zap },
           { id: 'debate-practice', label: 'Debate Sparring Partner', desc: 'Real-time simulated committee sparring', icon: Swords },

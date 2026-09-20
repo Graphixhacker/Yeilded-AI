@@ -161,6 +161,37 @@
         "count": 0
       },
       "createdAt": "2026-09-10T21:20:40.027Z"
+    },
+    "user_3nyr8ou1789903733083": {
+      "id": "user_3nyr8ou1789903733083",
+      "email": "testnewuser@example.com",
+      "name": "Test User",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-20",
+        "count": 0
+      },
+      "createdAt": "2026-09-20T11:28:53.083Z"
+    },
+    "user_dti0n231789904005843": {
+      "id": "user_dti0n231789904005843",
+      "email": "testdiag_user@example.com",
+      "name": "Test Delegate",
+      "tier": "free",
+      "passExpiresAt": null,
+      "generationsUsed": 0,
+      "dailyGenerations": {
+        "date": "2026-09-20",
+        "count": 0
+      },
+      "createdAt": "2026-09-20T11:33:25.843Z",
+      "chatUsage": {
+        "date": "2026-09-20",
+        "count": 5,
+        "lifetimeCount": 5
+      }
     }
   },
   "passwords": {
@@ -175,7 +206,9 @@
     "user_rv6f5s41789039280941": "password123",
     "user_qlygxv11789039300423": "google_oauth_auth",
     "user_4q1vxk11789074762556": "password123",
-    "user_3trhpqi1789075240027": "password123"
+    "user_3trhpqi1789075240027": "password123",
+    "user_3nyr8ou1789903733083": "password123",
+    "user_dti0n231789904005843": "password123"
   },
   "tokens": {
     "tok_demo_delegate_1": "demo-delegate-1",
@@ -201,8 +234,13 @@
     "tok_vdrkh4iohcr1789039300423": "user_qlygxv11789039300423",
     "tok_u2rljkfqok81789074762556": "user_4q1vxk11789074762556",
     "tok_yu2f2sx1zg1789074769328": "user_4q1vxk11789074762556",
-    "tok_8mxibat1t691789075240027": "user_3trhpqi1789075240027"
+    "tok_8mxibat1t691789075240027": "user_3trhpqi1789075240027",
+    "tok_5jqtnyjfdks1789903706315": "demo-delegate-1",
+    "tok_uhh8zuo7y8b1789903733083": "user_3nyr8ou1789903733083",
+    "tok_9j0auhi2dng1789904005843": "user_dti0n231789904005843",
+    "tok_0kvwrchk650f1789904011353": "user_dti0n231789904005843"
   },
+  "passwordResetTokens": [],
   "positionPapers": [],
   "speeches": [],
   "resolutions": [],
@@ -243,5 +281,6 @@
       "timestamp": 1789039344903,
       "date": "2026-09-10"
     }
-  ]
+  ],
+  "partnerships": []
 }

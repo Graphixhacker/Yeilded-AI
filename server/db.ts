@@ -372,6 +372,96 @@ class DBManager {
     return { allowed: true };
   }
 
+  public checkAndIncrementChatUsage(userId?: string): { allowed: boolean; reason?: string; isChatLimitReached?: boolean; requireAuth?: boolean; remaining: number | 'unlimited'; count: number } {
+    if (!userId) {
+      return {
+        allowed: false,
+        reason: 'Please sign in or create an account to use AI Chat (5 free messages per day).',
+        requireAuth: true,
+        remaining: 0,
+        count: 0
+      };
+    }
+
+    const user = this.getUser(userId);
+    if (!user) {
+      return {
+        allowed: false,
+        reason: 'User not found. Please sign in again.',
+        requireAuth: true,
+        remaining: 0,
+        count: 0
+      };
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (!user.chatUsage || user.chatUsage.date !== today) {
+      user.chatUsage = {
+        date: today,
+        count: 0,
+        lifetimeCount: user.chatUsage?.lifetimeCount || 0
+      };
+    }
+
+    const isPaid = user.tier === '1week' || user.tier === 'monthly';
+
+    if (isPaid) {
+      user.chatUsage.count += 1;
+      user.chatUsage.lifetimeCount = (user.chatUsage.lifetimeCount || 0) + 1;
+      this.save();
+      return {
+        allowed: true,
+        remaining: 'unlimited',
+        count: user.chatUsage.count
+      };
+    }
+
+    // Free tier: 5 messages per day
+    const FREE_CHAT_DAILY_LIMIT = 5;
+    if (user.chatUsage.count >= FREE_CHAT_DAILY_LIMIT) {
+      return {
+        allowed: false,
+        reason: 'Free tier limit reached (5 messages/day). Upgrade to a Conference Pass for unlimited AI Chat.',
+        isChatLimitReached: true,
+        remaining: 0,
+        count: user.chatUsage.count
+      };
+    }
+
+    user.chatUsage.count += 1;
+    user.chatUsage.lifetimeCount = (user.chatUsage.lifetimeCount || 0) + 1;
+    this.save();
+    return {
+      allowed: true,
+      remaining: Math.max(0, FREE_CHAT_DAILY_LIMIT - user.chatUsage.count),
+      count: user.chatUsage.count
+    };
+  }
+
+  public getChatUsage(userId?: string): { remaining: number | 'unlimited'; count: number; limit: number | 'unlimited'; isFree: boolean; isChatLimitReached: boolean } {
+    if (!userId) {
+      return { remaining: 0, count: 0, limit: 5, isFree: true, isChatLimitReached: false };
+    }
+    const user = this.getUser(userId);
+    if (!user) {
+      return { remaining: 0, count: 0, limit: 5, isFree: true, isChatLimitReached: false };
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (!user.chatUsage || user.chatUsage.date !== today) {
+      user.chatUsage = {
+        date: today,
+        count: 0,
+        lifetimeCount: user.chatUsage?.lifetimeCount || 0
+      };
+    }
+    const isPaid = user.tier === '1week' || user.tier === 'monthly';
+    if (isPaid) {
+      return { remaining: 'unlimited', count: user.chatUsage.count, limit: 'unlimited', isFree: false, isChatLimitReached: false };
+    }
+    const rem = Math.max(0, 5 - user.chatUsage.count);
+    return { remaining: rem, count: user.chatUsage.count, limit: 5, isFree: true, isChatLimitReached: rem === 0 };
+  }
+
   // Draft operations
   public savePositionPaper(draft: PositionPaperDraft): PositionPaperDraft {
     const idx = this.data.positionPapers.findIndex(p => p.id === draft.id);

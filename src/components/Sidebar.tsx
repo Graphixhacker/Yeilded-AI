@@ -17,7 +17,8 @@ import {
   Clock,
   ShieldAlert,
   Settings,
-  Mail
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 import { User, TabType, DelegateContext, Currency, SupportedLanguage, SUPPORTED_LANGUAGES } from '../types';
 import { Sun, Moon, Languages, DollarSign } from 'lucide-react';
@@ -112,6 +113,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: BookOpen,
       description: 'Motions cheat sheet & parliamentary AI',
       badge: 'Always Free',
+      gated: false
+    },
+    {
+      id: 'chat' as TabType,
+      label: 'AI Diplomatic Chat',
+      shortLabel: 'Diplomatic AI Chat',
+      icon: MessageSquare,
+      description: 'Real-time DeepSeek MUN advice & tactics',
+      badge: isFree ? '5 Free/Day' : 'Unlimited',
       gated: false
     },
     {

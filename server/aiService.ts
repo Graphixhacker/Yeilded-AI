@@ -34,7 +34,7 @@ export async function callDeepSeekChat(
         stream: false
       };
       
-      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,11 +50,13 @@ export async function callDeepSeekChat(
         }
       } else {
         const errText = await response.text();
-        console.warn('DeepSeek Chat API error:', response.status, errText);
+        console.error('[DeepSeek Chat API Error]', response.status, response.statusText, errText);
       }
-    } catch (e) {
-      console.warn('DeepSeek Chat fetch failed:', e);
+    } catch (e: any) {
+      console.error('[DeepSeek Chat Network Error]', e?.message || e);
     }
+  } else {
+    console.warn('[DeepSeek Chat] DEEPSEEK_API_KEY not configured or placeholder detected');
   }
 
   // 2. Fallback to Gemini
@@ -77,20 +79,20 @@ export async function callDeepSeekChat(
         model: 'gemini-2.5-flash',
         contents,
         config: {
-          systemInstruction: systemMsgs || "You are a helpful AI assistant.",
+          systemInstruction: systemMsgs || "You are an expert Model UN diplomatic AI assistant.",
           temperature: options.temperature ?? 0.7,
         }
       });
       if (geminiResponse.text) {
         return geminiResponse.text;
       }
-    } catch (e) {
-      console.warn('Gemini Chat Fallback failed:', e);
+    } catch (e: any) {
+      console.warn('[Gemini Chat Fallback Error]', e?.message || e);
     }
   }
 
-  // 3. Mock fallback
-  return "I am a helpful AI assistant. I am currently running in offline mock mode since API keys are missing. How can I help you today?";
+  // 3. Graceful failure message as required
+  return "Chat is temporarily unavailable, please try again.";
 }
 
 export async function callDeepSeekOrFallback(

@@ -113,8 +113,8 @@ export const AdminDashboard: React.FC = () => {
                 <th className="px-6 py-4 font-medium">User</th>
                 <th className="px-6 py-4 font-medium">Joined</th>
                 <th className="px-6 py-4 font-medium">Tier</th>
+                <th className="px-6 py-4 font-medium text-center">Chat Usage</th>
                 <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -138,6 +138,15 @@ export const AdminDashboard: React.FC = () => {
                       <option value="1week">1-Week Pass</option>
                       <option value="monthly">Monthly</option>
                     </select>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold">
+                      <span className="text-[#D4AF37] font-bold">{u.chatUsage?.count || 0}</span>
+                      <span className="text-slate-400 text-xs">today</span>
+                      {u.chatUsage?.lifetimeCount !== undefined && (
+                        <span className="text-slate-500 text-xs font-normal">({u.chatUsage.lifetimeCount} all-time)</span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     {u.banned ? (
