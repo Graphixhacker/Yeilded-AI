@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { DelegateContext, User, Currency, SupportedLanguage, SUPPORTED_LANGUAGES } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { DelegateContext, User, Currency, SupportedLanguage, SUPPORTED_LANGUAGES, ThemeMode } from '../types';
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss';
 import { UN_COMMITTEES, UN_COUNTRIES, PAKISTAN_POLITICAL_PARTIES } from '../data/unPresets';
-import { Globe, Shield, Settings, UserCircle, LogIn, Sparkles, ChevronDown, Check, Clock, X, DollarSign, Menu, Moon, Sun, Languages, Search } from 'lucide-react';
+import { Globe, Shield, Settings, UserCircle, LogIn, Sparkles, ChevronDown, Check, Clock, X, DollarSign, Menu, Moon, Sun, Laptop, Languages, Search, MessageSquare } from 'lucide-react';
 import { ROP_DATABASE } from '../data/ropCheatSheet';
 
 interface HeaderProps {
@@ -20,7 +20,10 @@ interface HeaderProps {
   onToggleMobileMenu?: () => void;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  themeMode?: ThemeMode;
+  onSetThemeMode?: (mode: ThemeMode) => void;
   onNavigate?: (tab: string) => void;
+  activeTab?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,9 +41,27 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleMobileMenu,
   isDarkMode = false,
   onToggleDarkMode,
-  onNavigate
+  themeMode = 'system',
+  onSetThemeMode,
+  onNavigate,
+  activeTab
 }) => {
   const [showContextModal, setShowContextModal] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close theme menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target as Node)) {
+        setShowThemeMenu(false);
+      }
+    };
+    if (showThemeMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showThemeMenu]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -229,22 +250,109 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Dark Mode Toggle Button (Desktop only - mobile accesses via More tab & Hamburger) */}
-        {onToggleDarkMode && (
+        {/* Desktop Quick AI Chat Button */}
+        {onNavigate && (
           <button
-            id="theme-toggle-btn"
-            onClick={onToggleDarkMode}
-            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="hidden sm:flex min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-[#0B1F3A] dark:hover:text-[#D4AF37] hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all items-center justify-center"
-            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode for late-night caucus'}
+            id="header-ai-chat-btn"
+            onClick={() => onNavigate('chat')}
+            className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold min-h-[44px] transition-all shadow-xs active:scale-98 ${
+              activeTab === 'chat'
+                ? 'bg-gradient-to-r from-[#D4AF37] to-[#b39126] text-[#0B1F3A] shadow-md ring-2 ring-[#D4AF37]/50'
+                : 'bg-gradient-to-r from-[#0B1F3A] to-[#163761] hover:from-[#122b50] hover:to-[#1e4575] text-[#D4AF37] border border-[#D4AF37]/40 hover:border-[#D4AF37]'
+            }`}
+            title="Open AI Diplomatic Chat (DeepSeek MUN Advisor)"
           >
-            {isDarkMode ? (
-              <Sun className="w-5 h-5 text-[#D4AF37] hover:rotate-45 transition-transform" />
-            ) : (
-              <Moon className="w-5 h-5 text-slate-700 hover:-rotate-12 transition-transform" />
-            )}
+            <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+            <span>AI Chat</span>
+            <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
+              Live
+            </span>
           </button>
         )}
+
+        {/* Dark Mode Toggle Button (Desktop only - mobile accesses via More tab & Hamburger) */}
+        {/* Theme Mode Toggle & Dropdown (Visible on mobile and desktop) */}
+        <div className="relative" ref={themeMenuRef}>
+          <button
+            id="theme-toggle-btn"
+            onClick={() => setShowThemeMenu(!showThemeMenu)}
+            aria-label="Theme settings (Light, Dark, System)"
+            className="flex min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:text-[#0B1F3A] dark:hover:text-[#D4AF37] hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 transition-all items-center justify-center"
+            title={`Current theme: ${themeMode} (${isDarkMode ? 'dark' : 'light'}). Click to change.`}
+          >
+            {isDarkMode ? (
+              <Sun className="w-5 h-5 text-[#D4AF37] transition-transform" />
+            ) : (
+              <Moon className="w-5 h-5 text-[#0B1F3A] transition-transform" />
+            )}
+          </button>
+
+          {showThemeMenu && (
+            <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-[#0c1c33] rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-1.5 z-50 animate-in fade-in slide-in-from-top-1">
+              <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                Appearance
+              </div>
+              <button
+                id="theme-opt-light"
+                onClick={() => {
+                  if (onSetThemeMode) onSetThemeMode('light');
+                  else if (onToggleDarkMode && isDarkMode) onToggleDarkMode();
+                  setShowThemeMenu(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold transition-colors ${
+                  themeMode === 'light'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] bg-slate-100 dark:bg-slate-800 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sun className="w-4 h-4 text-amber-500" />
+                  <span>Light</span>
+                </div>
+                {themeMode === 'light' && <Check className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37]" />}
+              </button>
+
+              <button
+                id="theme-opt-dark"
+                onClick={() => {
+                  if (onSetThemeMode) onSetThemeMode('dark');
+                  else if (onToggleDarkMode && !isDarkMode) onToggleDarkMode();
+                  setShowThemeMenu(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold transition-colors ${
+                  themeMode === 'dark'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] bg-slate-100 dark:bg-slate-800 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Moon className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Dark</span>
+                </div>
+                {themeMode === 'dark' && <Check className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37]" />}
+              </button>
+
+              <button
+                id="theme-opt-system"
+                onClick={() => {
+                  if (onSetThemeMode) onSetThemeMode('system');
+                  setShowThemeMenu(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold transition-colors ${
+                  themeMode === 'system'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] bg-slate-100 dark:bg-slate-800 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Laptop className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                  <span>System (Auto)</span>
+                </div>
+                {themeMode === 'system' && <Check className="w-3.5 h-3.5 text-[#0B1F3A] dark:text-[#D4AF37]" />}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Currency Switcher (Desktop only - mobile accesses via More tab) */}
         <button

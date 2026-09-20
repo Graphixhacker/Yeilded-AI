@@ -180,6 +180,8 @@ export type TabType =
   | 'archives'
   | 'pricing' | 'admin' | 'settings' | 'more';
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 export interface DebateTurn {
   speaker: 'user' | 'opponent' | 'chair';
   country: string;

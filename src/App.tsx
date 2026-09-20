@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DelegateContext, User, Currency, TabType } from './types';
+import { DelegateContext, User, Currency, TabType, ThemeMode } from './types';
 import { api } from './services/api';
 
 // Icons for mobile bottom nav
@@ -41,11 +41,24 @@ export default function App() {
   const [showLanding, setShowLanding] = useState<boolean>(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Dark Mode State
+  // Theme Mode State: 'light' | 'dark' | 'system'
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    try {
+      const saved = localStorage.getItem('mun_theme_mode');
+      if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+      const old = localStorage.getItem('mun_dark_mode');
+      if (old !== null) return old === 'true' ? 'dark' : 'light';
+      return 'system';
+    } catch {
+      return 'system';
+    }
+  });
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
-      const saved = localStorage.getItem('mun_dark_mode');
-      if (saved !== null) return saved === 'true';
+      const mode = localStorage.getItem('mun_theme_mode') || 'system';
+      if (mode === 'dark') return true;
+      if (mode === 'light') return false;
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     } catch {
       return false;
@@ -106,24 +119,54 @@ export default function App() {
 
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
-  // Sync Dark Mode class to document element and body
+  // Sync Theme Mode and Dark Mode to document element and body
   useEffect(() => {
-    try {
-      if (isDarkMode) {
+    const applyTheme = () => {
+      const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const shouldBeDark = themeMode === 'dark' || (themeMode === 'system' && systemDark);
+      setIsDarkMode(shouldBeDark);
+
+      if (shouldBeDark) {
         document.documentElement.classList.add('dark');
         document.body.classList.add('dark');
         document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('mun_dark_mode', 'true');
+        document.documentElement.style.colorScheme = 'dark';
       } else {
         document.documentElement.classList.remove('dark');
         document.body.classList.remove('dark');
         document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem('mun_dark_mode', 'false');
+        document.documentElement.style.colorScheme = 'light';
       }
-    } catch {
-      // ignore
+
+      try {
+        localStorage.setItem('mun_theme_mode', themeMode);
+        localStorage.setItem('mun_dark_mode', shouldBeDark ? 'true' : 'false');
+      } catch {
+        // ignore
+      }
+    };
+
+    applyTheme();
+
+    if (themeMode === 'system' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
     }
-  }, [isDarkMode]);
+  }, [themeMode]);
+
+  const handleSetThemeMode = (mode: ThemeMode) => {
+    setThemeMode(mode);
+  };
+
+  const handleToggleDarkMode = () => {
+    setThemeMode((prev) => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'system';
+      return 'light';
+    });
+  };
 
   const handleSetUser = (newUser: User | null) => {
     setUser(newUser);
@@ -192,10 +235,6 @@ export default function App() {
     } catch {
       window.location.href = search ? `${path}?${search}` : path;
     }
-  };
-
-  const handleToggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
   };
 
   const handleUpdateContext = (newCtx: DelegateContext) => {
@@ -298,7 +337,7 @@ export default function App() {
           onToggleDarkMode={handleToggleDarkMode}
         />
       ) : (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-[100dvh] overflow-hidden">
           {/* Left Navigation Sidebar */}
           <Sidebar
             activeTab={activeTab}
@@ -315,6 +354,10 @@ export default function App() {
             isMobileOpen={mobileSidebarOpen}
             onCloseMobile={() => setMobileSidebarOpen(false)}
             onViewLanding={() => setShowLanding(true)}
+            themeMode={themeMode}
+            onSetThemeMode={handleSetThemeMode}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={handleToggleDarkMode}
           />
 
           {/* Main Content Area */}
@@ -334,12 +377,19 @@ export default function App() {
               onLogout={handleLogout}
               currency={currency}
               onToggleCurrency={handleToggleCurrency}
+              themeMode={themeMode}
+              onSetThemeMode={handleSetThemeMode}
               isDarkMode={isDarkMode}
               onToggleDarkMode={handleToggleDarkMode}
+              activeTab={activeTab}
             />
 
-            {/* Scrollable Active View - Mobile-first single-column with 16px side padding */}
-            <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:p-8 pb-32 lg:pb-8 overflow-x-hidden">
+            {/* Active View - Mobile-first layout with safe-area spacing and 100dvh flex column for chat */}
+            <main className={`flex-1 min-w-0 ${
+              activeTab === 'chat'
+                ? 'flex flex-col h-full min-h-0 p-1.5 sm:p-4 lg:p-6 pb-[calc(56px+env(safe-area-inset-bottom,8px))] lg:pb-6 overflow-hidden'
+                : 'overflow-y-auto overflow-x-hidden px-3.5 py-4 sm:px-6 lg:p-8 pb-[calc(70px+env(safe-area-inset-bottom,12px))] lg:pb-8'
+            }`}>
               {activeTab === 'position-paper' && (
                 <PositionPaperTab
                   context={delegateContext}
@@ -383,6 +433,7 @@ export default function App() {
               {activeTab === 'chat' && (
                 <ChatTab
                   context={delegateContext}
+                  onUpdateContext={handleUpdatePartialContext}
                   user={user}
                   onOpenAuth={handleOpenAuth}
                   onOpenPricing={() => setIsPricingOpen(true)}

@@ -18,9 +18,10 @@ import {
   ShieldAlert,
   Settings,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Laptop
 } from 'lucide-react';
-import { User, TabType, DelegateContext, Currency, SupportedLanguage, SUPPORTED_LANGUAGES } from '../types';
+import { User, TabType, DelegateContext, Currency, SupportedLanguage, SUPPORTED_LANGUAGES, ThemeMode } from '../types';
 import { Sun, Moon, Languages, DollarSign } from 'lucide-react';
 
 export type ActiveTab = TabType;
@@ -41,6 +42,8 @@ interface SidebarProps {
   onOpenContextModal?: () => void;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  themeMode?: ThemeMode;
+  onSetThemeMode?: (mode: ThemeMode) => void;
   currency?: Currency;
   onToggleCurrency?: () => void;
 }
@@ -61,6 +64,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenContextModal,
   isDarkMode,
   onToggleDarkMode,
+  themeMode = 'system',
+  onSetThemeMode,
   currency,
   onToggleCurrency
 }) => {
@@ -79,6 +84,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isFreeLimitHit = isFree && freeGenerationsUsed >= 3;
 
   const navItems = [
+    {
+      id: 'chat' as TabType,
+      label: 'AI Diplomatic Chat',
+      shortLabel: 'Diplomatic AI Chat',
+      icon: MessageSquare,
+      description: 'Real-time DeepSeek MUN advice & tactics',
+      badge: isFree ? '5 Free/Day' : 'Unlimited',
+      gated: false
+    },
     {
       id: 'position-paper' as TabType,
       label: 'Position Paper Generator',
@@ -113,15 +127,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: BookOpen,
       description: 'Motions cheat sheet & parliamentary AI',
       badge: 'Always Free',
-      gated: false
-    },
-    {
-      id: 'chat' as TabType,
-      label: 'AI Diplomatic Chat',
-      shortLabel: 'Diplomatic AI Chat',
-      icon: MessageSquare,
-      description: 'Real-time DeepSeek MUN advice & tactics',
-      badge: isFree ? '5 Free/Day' : 'Unlimited',
       gated: false
     },
     {
@@ -190,7 +195,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Main Sidebar Container - lg:static ensures it occupies document flow on desktop and never overlaps main content */}
       <motion.aside
-        drag="x"
+        drag={isDrawerOpen ? "x" : false}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
         onDragEnd={(e, info) => {
@@ -199,7 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }
         }}
 
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 lg:z-auto w-72 shrink-0 h-full bg-[#0B1F3A] text-slate-100 flex flex-col border-r border-[#1E3A5F] shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 lg:z-auto w-72 shrink-0 h-full bg-[#0B1F3A] text-slate-100 flex flex-col border-r border-[#1E3A5F] shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out lg:translate-x-0! ${
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -490,6 +495,55 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span>Tour Platform & Features</span>
             </button>
           )}
+
+          {/* Theme Mode Selector in Sidebar / More Menu */}
+          <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <span>Theme Mode</span>
+              <span className="text-[10px] text-[#D4AF37] capitalize">{themeMode || (isDarkMode ? 'dark' : 'light')}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950/70 rounded-lg border border-slate-800">
+              <button
+                id="sidebar-theme-light"
+                type="button"
+                onClick={() => onSetThemeMode && onSetThemeMode('light')}
+                className={`min-h-[36px] py-1 px-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  themeMode === 'light'
+                    ? 'bg-white text-[#0B1F3A] shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span>Light</span>
+              </button>
+              <button
+                id="sidebar-theme-dark"
+                type="button"
+                onClick={() => onSetThemeMode && onSetThemeMode('dark')}
+                className={`min-h-[36px] py-1 px-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  themeMode === 'dark'
+                    ? 'bg-[#122847] text-[#D4AF37] border border-[#D4AF37]/30 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Moon className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span>Dark</span>
+              </button>
+              <button
+                id="sidebar-theme-system"
+                type="button"
+                onClick={() => onSetThemeMode && onSetThemeMode('system')}
+                className={`min-h-[36px] py-1 px-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  themeMode === 'system'
+                    ? 'bg-[#122847] text-white border border-slate-600 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Laptop className="w-3.5 h-3.5" />
+                <span>Auto</span>
+              </button>
+            </div>
+          </div>
 
           <button
             id="btn-sidebar-pricing"

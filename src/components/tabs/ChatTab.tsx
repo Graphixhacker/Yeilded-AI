@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DelegateContext, User } from '../../types';
+import { UN_COUNTRIES } from '../../data/unPresets';
 import { api } from '../../services/api';
 import { 
   Bot, 
@@ -15,7 +16,8 @@ import {
   Globe, 
   Shield, 
   Lock,
-  MessageSquare
+  MessageSquare,
+  ChevronDown
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -27,6 +29,7 @@ interface ChatMessage {
 
 interface ChatTabProps {
   context: DelegateContext;
+  onUpdateContext?: (ctx: Partial<DelegateContext>) => void;
   user: User | null;
   onOpenAuth: () => void;
   onOpenPricing: () => void;
@@ -41,6 +44,7 @@ const QUICK_PROMPTS = [
 
 export const ChatTab: React.FC<ChatTabProps> = ({
   context,
+  onUpdateContext,
   user,
   onOpenAuth,
   onOpenPricing
@@ -251,257 +255,255 @@ Give concise, diplomatic, realistic MUN advice, formal UN rhetoric, parliamentar
   const isFree = !user || user.tier === 'free';
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 flex flex-col h-[calc(100vh-140px)] min-h-[550px]">
-      {/* Top Header Card */}
-      <div className="bg-white dark:bg-[#071326] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0B1F3A] to-[#1a3a60] dark:from-[#D4AF37]/20 dark:to-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/30 shadow-xs">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  AI Diplomatic Advisor
-                </h1>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                  DeepSeek Powered
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Live committee consulting, tactical parliamentary phrasing & speech coaching
-              </p>
-            </div>
+    <div className="w-full max-w-5xl mx-auto flex flex-col h-full min-h-0 bg-white dark:bg-[#071326] sm:border sm:border-slate-200 sm:dark:border-slate-800 sm:rounded-2xl overflow-hidden shadow-xs">
+      {/* Compact Header (Single line title, no large icon block, small pill, full-width compact country dropdown + compact action row) */}
+      <div className="px-3 py-2 sm:px-4 sm:py-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-[#0c1c33] shrink-0 space-y-2">
+        {/* Line 1: Title + Pill + Clear Trash */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
+              AI Diplomatic Advisor
+            </h1>
+            <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800 shrink-0">
+              DeepSeek
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-            {/* Context Badge */}
-            {context.country && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium">
-                <Globe className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span className="truncate max-w-[140px]">{context.country}</span>
-              </div>
-            )}
+          <button
+            onClick={handleClearHistory}
+            title="Clear conversation history"
+            className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            aria-label="Clear chat history"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
 
-            {/* Usage Tier Pill */}
-            {!user ? (
-              <button
-                onClick={onOpenAuth}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-xs"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>Sign In for 5 Free msgs/day</span>
-              </button>
-            ) : isFree ? (
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2.5 py-1 rounded-lg font-semibold border ${
-                  isLimitReached 
-                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-800' 
-                    : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                }`}>
-                  Free Tier: {remainingMessages}/5 today
-                </span>
-                <button
-                  onClick={onOpenPricing}
-                  className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] border border-[#D4AF37]/30 transition-colors shadow-xs"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>Upgrade</span>
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Unlimited Pass Active</span>
-              </div>
-            )}
-
-            <button
-              onClick={handleClearHistory}
-              title="Clear conversation history"
-              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        {/* Line 2: Full-width compact Country Selector + Auth / Tier compact button */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#D4AF37]">
+              <Globe className="w-3.5 h-3.5" />
+            </div>
+            <select
+              value={context.country || 'United States of America'}
+              onChange={(e) => onUpdateContext?.({ country: e.target.value })}
+              className="w-full pl-8 pr-7 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] appearance-none truncate"
+              title="Select representing country"
             >
-              <Trash2 className="w-4 h-4" />
-            </button>
+              {UN_COUNTRIES.map((c) => (
+                <option key={c} value={c} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs">
+                  {c}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+              <ChevronDown className="w-3.5 h-3.5" />
+            </div>
           </div>
+
+          {!user ? (
+            <button
+              onClick={onOpenAuth}
+              className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-2xs whitespace-nowrap min-h-[32px]"
+            >
+              <Lock className="w-3 h-3" />
+              <span>5 Free msgs/day</span>
+            </button>
+          ) : isFree ? (
+            <div className="shrink-0 flex items-center gap-1.5">
+              <span className={`text-[11px] px-2 py-1 rounded-md font-semibold border ${
+                isLimitReached 
+                  ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-800' 
+                  : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+              }`}>
+                {remainingMessages}/5 left
+              </span>
+              <button
+                onClick={onOpenPricing}
+                className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-md bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#D4AF37] dark:hover:bg-[#c49f2f] text-[#D4AF37] dark:text-[#0B1F3A] border border-[#D4AF37]/30 transition-colors shadow-2xs"
+              >
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>Pass</span>
+              </button>
+            </div>
+          ) : (
+            <div className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <Shield className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Pro Active</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Free Tier Limit Reached Warning Card */}
       {isLimitReached && (
-        <div className="bg-amber-50 dark:bg-[#1f1906] border border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-200/50 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm">Daily Free Tier Chat Limit Reached (5/5)</h4>
-              <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
-                Your 5 free diplomatic messages for today have been used. Upgrade to a Conference Pass for unlimited live AI advice.
-              </p>
-            </div>
+        <div className="bg-amber-50 dark:bg-[#1f1906] border-b border-amber-300 dark:border-amber-700/60 p-2.5 sm:p-3 flex items-center justify-between gap-2 text-amber-900 dark:text-amber-200 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <p className="text-xs truncate">
+              Daily free limit (5/5) reached. Upgrade for unlimited AI advice.
+            </p>
           </div>
           <button
             onClick={onOpenPricing}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] border border-[#D4AF37]/40 transition-colors shadow-sm flex items-center justify-center gap-1.5 shrink-0"
+            className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0B1F3A] border border-[#D4AF37]/40 transition-colors shadow-2xs flex items-center gap-1"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Unlock Unlimited Chat</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>Upgrade</span>
+            <ArrowUpRight className="w-3 h-3" />
           </button>
         </div>
       )}
 
-      {/* Main Chat Box Container */}
-      <div className="flex-1 bg-white dark:bg-[#071326] border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-sm">
-        {/* Messages List */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          {messages.map((msg) => {
-            const isUser = msg.role === 'user';
-            return (
+      {/* Messages List */}
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 min-h-0">
+        {messages.map((msg) => {
+          const isUser = msg.role === 'user';
+          return (
+            <div
+              key={msg.id}
+              className={`flex gap-2 max-w-[92%] sm:max-w-[85%] ${
+                isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
+              }`}
+            >
               <div
-                key={msg.id}
-                className={`flex gap-3 max-w-[90%] sm:max-w-[80%] ${
-                  isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
+                className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${
+                  isUser
+                    ? 'bg-[#0B1F3A] dark:bg-slate-700 text-white'
+                    : 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30'
                 }`}
               >
+                {isUser ? <UserIcon className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+              </div>
+
+              <div className={`space-y-1 min-w-0 ${isUser ? 'text-right' : 'text-left'}`}>
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold ${
+                  className={`inline-block text-left p-3 sm:p-3.5 rounded-2xl text-[15px] sm:text-base leading-relaxed whitespace-pre-wrap select-text shadow-2xs ${
                     isUser
-                      ? 'bg-[#0B1F3A] text-white'
-                      : 'bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30'
+                      ? 'bg-[#0B1F3A] dark:bg-[#D4AF37] text-white dark:text-[#0B1F3A] font-medium rounded-tr-xs'
+                      : 'bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700/60 rounded-tl-xs'
                   }`}
                 >
-                  {isUser ? <UserIcon className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                  {msg.content}
                 </div>
 
-                <div className={`space-y-1 ${isUser ? 'text-right' : 'text-left'}`}>
-                  <div
-                    className={`inline-block text-left p-3.5 sm:p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap select-text ${
-                      isUser
-                        ? 'bg-[#0B1F3A] text-white rounded-tr-xs'
-                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/60 rounded-tl-xs'
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-
-                  <div className="flex items-center gap-2 px-1 text-[11px] text-slate-400">
-                    <span>{msg.timestamp}</span>
-                    {!isUser && (
-                      <button
-                        onClick={() => handleCopy(msg.id, msg.content)}
-                        className="hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center gap-1"
-                        title="Copy answer"
-                      >
-                        {copiedId === msg.id ? (
-                          <>
-                            <Check className="w-3 h-3 text-emerald-500" />
-                            <span className="text-emerald-500 font-medium">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
+                <div className={`flex items-center gap-2 px-1 text-[10px] text-slate-400 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                  <span>{msg.timestamp}</span>
+                  {!isUser && (
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.content)}
+                      className="hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center gap-1"
+                      title="Copy answer"
+                    >
+                      {copiedId === msg.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-500 font-medium">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
-              </div>
-            );
-          })}
-
-          {isLoading && (
-            <div className="flex gap-3 mr-auto max-w-[80%]">
-              <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 animate-pulse" />
-              </div>
-              <div className="p-3.5 sm:p-4 rounded-2xl rounded-tl-xs bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 text-slate-500 dark:text-slate-300 text-sm flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-[#D4AF37]" />
-                <span>Consulting diplomatic briefing archives...</span>
               </div>
             </div>
-          )}
+          );
+        })}
 
-          <div ref={messagesEndRef} />
-        </div>
+        {isLoading && (
+          <div className="flex gap-2 mr-auto max-w-[92%] sm:max-w-[85%]">
+            <div className="w-6 h-6 rounded-full bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center shrink-0">
+              <Bot className="w-3.5 h-3.5 animate-pulse" />
+            </div>
+            <div className="p-3 rounded-2xl rounded-tl-xs bg-slate-100 dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 text-sm flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#D4AF37]" />
+              <span>Consulting diplomatic briefing archives...</span>
+            </div>
+          </div>
+        )}
 
-        {/* Quick Suggestion Chips */}
-        {messages.length <= 3 && !isLoading && (
-          <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">Suggested:</span>
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Suggested Prompts (Horizontally scrollable row with clean touch scrolling) */}
+      {messages.length <= 3 && !isLoading && (
+        <div className="relative px-3 py-1.5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5">
+            <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap shrink-0">Prompts:</span>
             {QUICK_PROMPTS.map((prompt, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(prompt)}
                 disabled={isLoading || isLimitReached || !user}
-                className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                className="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 shrink-0 disabled:opacity-50 min-h-[30px] flex items-center active:scale-97"
               >
                 {prompt}
               </button>
             ))}
           </div>
-        )}
-
-        {/* Input Area */}
-        <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-          {!user ? (
-            <div className="p-3 text-center bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-2">
-                Sign in or register for free to start using AI Diplomatic Advisor (5 free messages per day).
-              </p>
-              <button
-                onClick={onOpenAuth}
-                className="px-4 py-2 rounded-lg text-xs font-bold bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] border border-[#D4AF37]/30 transition-colors shadow-xs"
-              >
-                Sign In / Create Free Account
-              </button>
-            </div>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
-              }}
-              className="flex items-end gap-2"
-            >
-              <div className="relative flex-1">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={
-                    isLimitReached
-                      ? "Daily free limit reached (5/5). Upgrade to continue chatting..."
-                      : `Ask anything about ${context.committee || 'committee'}, ${context.country || 'your stance'}, or MUN rules... (Enter to send)`
-                  }
-                  rows={2}
-                  disabled={isLoading || isLimitReached}
-                  className="w-full resize-none p-3 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] text-slate-900 dark:text-white placeholder:text-slate-400 disabled:opacity-50"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading || isLimitReached}
-                className="min-h-[44px] min-w-[44px] sm:px-4 py-2.5 rounded-xl bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#D4AF37] dark:hover:bg-[#c49f2f] text-[#D4AF37] dark:text-[#0B1F3A] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shadow-sm"
-                aria-label="Send message"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    <span className="hidden sm:inline text-xs">Send</span>
-                  </>
-                )}
-              </button>
-            </form>
-          )}
         </div>
+      )}
+
+      {/* Pinned Input Area above Bottom Nav */}
+      <div className="p-2.5 sm:p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#071326] shrink-0">
+        {!user ? (
+          <div className="p-2.5 text-center bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700">
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-2">
+              Sign in for 5 free AI diplomatic consults per day.
+            </p>
+            <button
+              onClick={onOpenAuth}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-[#0B1F3A] hover:bg-[#132c4f] text-[#D4AF37] border border-[#D4AF37]/30 transition-colors shadow-2xs"
+            >
+              Sign In / Free Account
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex items-end gap-2"
+          >
+            <div className="relative flex-1 min-w-0">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  isLimitReached
+                    ? "Daily free limit reached (5/5). Upgrade to continue..."
+                    : `Ask about ${context.country || 'your stance'} or committee rules... (Enter to send)`
+                }
+                rows={1}
+                disabled={isLoading || isLimitReached}
+                className="w-full resize-none py-2.5 px-3 text-[15px] sm:text-base leading-snug bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B1F3A] dark:focus:ring-[#D4AF37] text-slate-900 dark:text-white placeholder:text-slate-400 disabled:opacity-50 max-h-[100px]"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading || isLimitReached}
+              className="min-h-[44px] min-w-[44px] px-3.5 py-2.5 rounded-xl bg-[#0B1F3A] hover:bg-[#132c4f] dark:bg-[#D4AF37] dark:hover:bg-[#c49f2f] text-[#D4AF37] dark:text-[#0B1F3A] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shadow-2xs shrink-0 active:scale-95"
+              aria-label="Send message"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span className="hidden sm:inline text-xs">Send</span>
+                </>
+              )}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
