@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ErrorAlert } from "../ErrorAlert";
 
-import { DelegateContext, User, ResolutionClause } from '../../types';
+import { DelegateContext, User, ResolutionClause, StudyGuide } from '../../types';
 import { PREAMBULATORY_STARTERS, OPERATIVE_STARTERS } from '../../data/unPresets';
 import { api } from '../../services/api';
 import { exportDocumentToPDF, exportDocumentToWord, copyToClipboard } from '../../utils/exportUtils';
@@ -18,7 +18,8 @@ import {
   Copy,
   Check,
   FileDown,
-  AlertCircle
+  AlertCircle,
+  BookMarked
 } from 'lucide-react';
 
 interface ResolutionBuilderTabProps {
@@ -68,6 +69,24 @@ export const ResolutionBuilderTab: React.FC<ResolutionBuilderTabProps> = ({
   const [copied, setCopied] = useState(false);
   const [copiedClauseId, setCopiedClauseId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [activeGuide, setActiveGuide] = useState<StudyGuide | null>(null);
+  const [guideAppliedNotification, setGuideAppliedNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (user && context.committee) {
+      api.getStudyGuideForCommittee(context.committee)
+        .then((res) => {
+          if (isMounted) setActiveGuide(res.guide || null);
+        })
+        .catch(() => {
+          if (isMounted) setActiveGuide(null);
+        });
+    } else {
+      setActiveGuide(null);
+    }
+    return () => { isMounted = false; };
+  }, [user, context.committee]);
 
   const handleCopyClause = async (clause: ResolutionClause) => {
     const fullText = `${clause.starter} ${clause.text}`;
@@ -132,6 +151,10 @@ export const ResolutionBuilderTab: React.FC<ResolutionBuilderTabProps> = ({
           text: c.text || ''
         }));
         setClauses((prev) => [...prev, ...mapped]);
+        if (res.guideApplied) {
+          setGuideAppliedNotification(res.guideName ? `Study guide for ${res.guideName} intelligence auto-injected into clause suggestions.` : 'Study guide intelligence auto-injected into clause suggestions.');
+          setTimeout(() => setGuideAppliedNotification(null), 7000);
+        }
       } else {
         setErrorMsg('AI returned a format that could not be parsed automatically.');
       }
@@ -239,6 +262,28 @@ ${operativeClauses
           </button>
         </div>
       </div>
+
+      {/* Active Study Guide Pill */}
+      {activeGuide && (
+        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <BookMarked className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate">
+              <strong>Study Guide Linked:</strong> {activeGuide.fileName || activeGuide.committeeName} (Applied to AI Clause Suggestions)
+            </span>
+          </div>
+          <span className="px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-800/60 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] shrink-0">
+            Auto-Injected
+          </span>
+        </div>
+      )}
+
+      {guideAppliedNotification && (
+        <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          <span>{guideAppliedNotification}</span>
+        </div>
+      )}
 
       {errorMsg && (
         <ErrorAlert message={errorMsg} />

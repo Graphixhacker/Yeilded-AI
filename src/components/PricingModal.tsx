@@ -112,45 +112,46 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
     >
       <div 
-        className="bg-white dark:bg-[#060f1d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-[#060f1d] w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]"
       >
-        <div className="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-            <h2 className="text-lg font-bold text-[#0B1F3A] dark:text-[#D4AF37]">Upgrade Access</h2>
+            <h2 className="text-base sm:text-lg font-bold text-[#0B1F3A] dark:text-[#D4AF37]">Upgrade Access</h2>
           </div>
           <button 
             onClick={handleClose}
-            className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-colors"
+            aria-label="Close upgrade modal"
           >
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-6">
           {paymentStep === 'plans' && (
             <>
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-[#0B1F3A] dark:text-white mb-2">
+              <div className="text-center mb-6 sm:mb-8">
+                <h3 className="text-xl sm:text-2xl font-bold text-[#0B1F3A] dark:text-white mb-2">
                   Unleash Your Diplomatic Potential
                 </h3>
-                <p className="text-base text-slate-600 dark:text-slate-400 max-w-lg mx-auto">
+                <p className="text-xs sm:text-base text-slate-600 dark:text-slate-400 max-w-lg mx-auto">
                   Upgrade your pass to remove AI limits, unlock the Crisis Simulator, and gain a definitive edge in committee.
                 </p>
                 <div className="mt-4 flex justify-center">
-                  <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                     <button 
                       onClick={() => currency !== 'PKR' && onToggleCurrency()}
-                      className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${currency === 'PKR' ? 'bg-white dark:bg-slate-700 text-[#0B1F3A] dark:text-[#D4AF37] shadow-sm' : 'text-slate-500'}`}
+                      className={`px-3.5 py-2 min-h-[40px] text-sm font-bold rounded-lg transition-colors ${currency === 'PKR' ? 'bg-white dark:bg-slate-700 text-[#0B1F3A] dark:text-[#D4AF37] shadow-xs' : 'text-slate-500'}`}
                     >
                       PKR
                     </button>
                     <button 
                       onClick={() => currency !== 'USD' && onToggleCurrency()}
-                      className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${currency === 'USD' ? 'bg-white dark:bg-slate-700 text-[#0B1F3A] dark:text-[#D4AF37] shadow-sm' : 'text-slate-500'}`}
+                      className={`px-3.5 py-2 min-h-[40px] text-sm font-bold rounded-lg transition-colors ${currency === 'USD' ? 'bg-white dark:bg-slate-700 text-[#0B1F3A] dark:text-[#D4AF37] shadow-xs' : 'text-slate-500'}`}
                     >
                       USD
                     </button>
@@ -208,7 +209,7 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
 
                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/50">
                       {plan.id === 'free' ? (
-                        <button disabled className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-sm font-bold">
+                        <button disabled className="w-full min-h-[44px] py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-sm font-bold flex items-center justify-center">
                           Current Plan
                         </button>
                       ) : (
@@ -221,7 +222,7 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
                               setPaymentStep('checkout');
                             }
                           }}
-                          className={`w-full py-2.5 rounded-xl text-sm font-bold transition-colors ${
+                          className={`w-full min-h-[44px] py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center ${
                             selectedTier === plan.id
                               ? 'bg-[#0B1F3A] text-[#D4AF37] hover:bg-[#132c4f] shadow-md'
                               : 'bg-slate-100 dark:bg-slate-800 text-[#0B1F3A] dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -310,7 +311,7 @@ export function PricingModal({ isOpen, onClose, user, onOpenAuth, currency, onTo
                     <p>Please transfer exactly <strong className="text-[#0B1F3A] dark:text-white">{currentPricingData[selectedTier].price}</strong> to the following bank account:</p>
                     <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 font-mono text-base shadow-inner space-y-2">
                       <div className="flex justify-between items-center"><span className="text-slate-500">Bank:</span> <span className="font-bold">Bank Alfalah</span></div>
-                      <div className="flex justify-between items-center"><span className="text-slate-500">IBAN / A/C:</span> <span className="font-bold tracking-wider text-emerald-600 dark:text-emerald-400">PK33ALFH0304001005709819</span></div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1"><span className="text-slate-500 text-xs sm:text-base">IBAN / A/C:</span> <span className="font-bold tracking-wider text-emerald-600 dark:text-emerald-400 text-xs sm:text-base break-all">PK33ALFH0304001005709819</span></div>
                     </div>
                   </div>
                 )}

@@ -19,7 +19,8 @@ import {
   Settings,
   Mail,
   MessageSquare,
-  Laptop
+  Laptop,
+  BookMarked
 } from 'lucide-react';
 import { User, TabType, DelegateContext, Currency, SupportedLanguage, SUPPORTED_LANGUAGES, ThemeMode } from '../types';
 import { Sun, Moon, Languages, DollarSign } from 'lucide-react';
@@ -118,6 +119,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Layers,
       description: 'Preambulatory & Operative clause generator',
       badge: 'Always Free',
+      gated: false
+    },
+    {
+      id: 'study-guide' as TabType,
+      label: 'My Study Guide',
+      shortLabel: 'Study Guide',
+      icon: BookMarked,
+      description: 'PDF guide summary & auto-prompt injection',
+      badge: 'DeepSeek AI',
       gated: false
     },
     {

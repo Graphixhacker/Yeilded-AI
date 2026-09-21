@@ -1,4 +1,4 @@
-import { User, PositionPaperDraft, SpeechDraft, ResolutionDraft, CrisisNote, Currency } from '../types';
+import { User, PositionPaperDraft, SpeechDraft, ResolutionDraft, CrisisNote, Currency, StudyGuide } from '../types';
 
 const TOKEN_STORAGE_KEY = 'mun_auth_token';
 const CONTEXT_STORAGE_KEY = 'mun_delegate_context';
@@ -260,5 +260,43 @@ export const api = {
 
   async getChatUsage(): Promise<{ remaining: number | 'unlimited'; count: number; limit: number | 'unlimited'; isFree: boolean; isChatLimitReached: boolean }> {
     return request('/chat/usage');
+  },
+
+  // Study Guides
+  async getStudyGuides(): Promise<{ guides: StudyGuide[]; limit: number; currentCount: number; canAdd: boolean; tier: string }> {
+    return request('/study-guides');
+  },
+
+  async getStudyGuideForCommittee(committee: string): Promise<{ guide: StudyGuide | null }> {
+    return request(`/study-guides/for-committee?committee=${encodeURIComponent(committee)}`);
+  },
+
+  async uploadStudyGuide(data: {
+    committeeId: string;
+    committeeName: string;
+    topic?: string;
+    inputType: 'pdf' | 'text';
+    pdfBase64?: string;
+    text?: string;
+    fileName?: string;
+    fileSize?: number;
+  }): Promise<{ guide: StudyGuide; guides: StudyGuide[]; limit: number; currentCount: number; canAdd: boolean; message: string }> {
+    return request('/study-guides', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateStudyGuide(id: string, data: { summary?: any; topic?: string; committeeName?: string }): Promise<{ guide: StudyGuide; message: string }> {
+    return request(`/study-guides/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteStudyGuide(id: string): Promise<{ success: boolean; guides: StudyGuide[]; limit: number; currentCount: number; canAdd: boolean }> {
+    return request(`/study-guides/${id}`, {
+      method: 'DELETE'
+    });
   }
 };

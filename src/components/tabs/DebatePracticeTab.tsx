@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ErrorAlert } from "../ErrorAlert";
 
-import { DelegateContext, User, DebateTurn } from '../../types';
+import { DelegateContext, User, DebateTurn, StudyGuide } from '../../types';
 import { UN_COUNTRIES } from '../../data/unPresets';
 import { api } from '../../services/api';
 import {
@@ -14,7 +14,8 @@ import {
   RotateCcw,
   CheckCircle2,
   Lock,
-  UserCheck
+  UserCheck,
+  BookMarked
 } from 'lucide-react';
 
 interface DebatePracticeTabProps {
@@ -54,6 +55,24 @@ export const DebatePracticeTab: React.FC<DebatePracticeTabProps> = ({
     policyAdherence: 9
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [activeGuide, setActiveGuide] = useState<StudyGuide | null>(null);
+  const [guideAppliedNotification, setGuideAppliedNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (user && context.committee) {
+      api.getStudyGuideForCommittee(context.committee)
+        .then((res) => {
+          if (isMounted) setActiveGuide(res.guide || null);
+        })
+        .catch(() => {
+          if (isMounted) setActiveGuide(null);
+        });
+    } else {
+      setActiveGuide(null);
+    }
+    return () => { isMounted = false; };
+  }, [user, context.committee]);
 
   const isFree = !user || user.tier === 'free';
   const isFreeLimitHit = isFree && (user?.generationsUsed || 0) >= 3;
@@ -112,6 +131,11 @@ export const DebatePracticeTab: React.FC<DebatePracticeTabProps> = ({
 
         if (res.result.scores) {
           setCurrentScore(res.result.scores);
+        }
+
+        if (res.guideApplied) {
+          setGuideAppliedNotification(res.guideName ? `Study guide for ${res.guideName} intelligence auto-injected into debate persona.` : 'Study guide intelligence auto-injected into debate persona.');
+          setTimeout(() => setGuideAppliedNotification(null), 7000);
         }
       }
 
@@ -175,6 +199,28 @@ export const DebatePracticeTab: React.FC<DebatePracticeTabProps> = ({
           </select>
         </div>
       </div>
+
+      {/* Active Study Guide Pill */}
+      {activeGuide && (
+        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <BookMarked className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate">
+              <strong>Study Guide Linked:</strong> {activeGuide.fileName || activeGuide.committeeName} (Auto-injected into opponent debate intelligence)
+            </span>
+          </div>
+          <span className="px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-800/60 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] shrink-0">
+            Auto-Injected
+          </span>
+        </div>
+      )}
+
+      {guideAppliedNotification && (
+        <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          <span>{guideAppliedNotification}</span>
+        </div>
+      )}
 
       {errorMsg && <ErrorAlert message={errorMsg} />}
 

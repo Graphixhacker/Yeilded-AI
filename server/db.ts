@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import type { User, PositionPaperDraft, SpeechDraft, ResolutionDraft, CrisisNote } from '../src/types/index.ts';
+import type { User, PositionPaperDraft, SpeechDraft, ResolutionDraft, CrisisNote, StudyGuide } from '../src/types/index.ts';
 
 interface UsageLog {
   id: string;
@@ -27,6 +27,7 @@ interface DatabaseSchema {
   speeches: SpeechDraft[];
   resolutions: ResolutionDraft[];
   crisisNotes: CrisisNote[];
+  studyGuides?: StudyGuide[];
   usageLogs: UsageLog[];
   partnerships: any[];
 }
@@ -66,6 +67,7 @@ const INITIAL_DB: DatabaseSchema = {
   speeches: [],
   resolutions: [],
   crisisNotes: [],
+  studyGuides: [],
   usageLogs: [],
   partnerships: []
 };
@@ -516,6 +518,105 @@ class DBManager {
 
   public getResolutions(userId: string): ResolutionDraft[] {
     return this.data.resolutions.filter(r => r.userId === userId);
+  }
+
+  // Study Guide operations
+  public getStudyGuides(userId: string): StudyGuide[] {
+    const list = this.data.studyGuides || [];
+    return list.filter(g => g.userId === userId);
+  }
+
+  public getStudyGuide(id: string, userId: string): StudyGuide | undefined {
+    const list = this.data.studyGuides || [];
+    return list.find(g => g.id === id && g.userId === userId);
+  }
+
+  public findStudyGuideForCommittee(userId: string, committeeIdOrName: string): StudyGuide | undefined {
+    if (!committeeIdOrName || !committeeIdOrName.trim()) return undefined;
+    const userGuides = this.getStudyGuides(userId);
+    if (userGuides.length === 0) return undefined;
+
+    const query = committeeIdOrName.trim().toLowerCase();
+
+    // 1. Exact match on committeeId or committeeName
+    const exact = userGuides.find(g => 
+      g.committeeId.toLowerCase() === query || 
+      g.committeeName.toLowerCase() === query
+    );
+    if (exact) return exact;
+
+    // 2. Substring matching (e.g., 'UNSC' inside 'United Nations Security Council (UNSC)')
+    const substring = userGuides.find(g => {
+      const cId = g.committeeId.toLowerCase();
+      const cName = g.committeeName.toLowerCase();
+      return query.includes(cId) || query.includes(cName) || cId.includes(query) || cName.includes(query);
+    });
+
+    return substring;
+  }
+
+  public canAddStudyGuide(userId: string): { allowed: boolean; limit: number; currentCount: number; reason?: string } {
+    const user = this.getUser(userId);
+    const isPaid = user?.tier === '1week' || user?.tier === 'monthly';
+    const limit = isPaid ? 5 : 1;
+    const currentCount = this.getStudyGuides(userId).length;
+
+    if (currentCount >= limit) {
+      const reason = isPaid
+        ? `You have reached the maximum of 5 study guides for your Conference Pass.`
+        : `Free tier allows 1 study guide. Upgrade to a Conference Pass to upload up to 5 study guides.`;
+      return { allowed: false, limit, currentCount, reason };
+    }
+
+    return { allowed: true, limit, currentCount };
+  }
+
+  public saveStudyGuide(guide: StudyGuide): StudyGuide {
+    if (!this.data.studyGuides) {
+      this.data.studyGuides = [];
+    }
+
+    // Check if updating existing by id, or same committee for this user
+    const idx = this.data.studyGuides.findIndex(g => g.id === guide.id);
+    if (idx >= 0) {
+      this.data.studyGuides[idx] = { ...this.data.studyGuides[idx], ...guide, updatedAt: new Date().toISOString() };
+      this.save();
+      return this.data.studyGuides[idx];
+    }
+
+    this.data.studyGuides.unshift(guide);
+    this.save();
+    return guide;
+  }
+
+  public updateStudyGuide(id: string, userId: string, updates: Partial<StudyGuide>): StudyGuide | null {
+    if (!this.data.studyGuides) this.data.studyGuides = [];
+    const idx = this.data.studyGuides.findIndex(g => g.id === id && g.userId === userId);
+    if (idx < 0) return null;
+
+    const existing = this.data.studyGuides[idx];
+    const updated: StudyGuide = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      userId: existing.userId,
+      summary: updates.summary ? { ...existing.summary, ...updates.summary } : existing.summary,
+      updatedAt: new Date().toISOString()
+    };
+    this.data.studyGuides[idx] = updated;
+    this.save();
+    return updated;
+  }
+
+  public deleteStudyGuide(id: string, userId: string): boolean {
+    if (!this.data.studyGuides) return false;
+    const prevLen = this.data.studyGuides.length;
+    this.data.studyGuides = this.data.studyGuides.filter(g => !(g.id === id && g.userId === userId));
+    if (this.data.studyGuides.length !== prevLen) {
+      this.save();
+      return true;
+    }
+    return false;
   }
 }
 

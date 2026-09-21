@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           transform: offset.y > 0 ? `translateY(${offset.y}px)` : undefined,
           transition: isSwiping ? 'none' : 'transform 0.2s ease-out'
         }}
-        className="bg-white dark:bg-[#0c1c33] rounded-2xl w-[96%] max-w-md max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative"
+        className="bg-white dark:bg-[#0c1c33] rounded-2xl w-[96%] max-w-md max-h-[90dvh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative"
       >
         {/* Swipe-to-dismiss pull handle indicator for mobile */}
         <div className="sm:hidden flex justify-center pt-2 pb-1 bg-[#0B1F3A] cursor-grab active:cursor-grabbing border-b border-[#D4AF37]/10">
@@ -323,8 +323,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onClick={() => {
                     setMode('signup');
                     setError(null);
-                                      }}
-                  className="font-bold text-[#0B1F3A] dark:text-[#D4AF37] hover:underline min-h-[36px] inline-flex items-center px-1"
+                  }}
+                  className="font-bold text-[#0B1F3A] dark:text-[#D4AF37] hover:underline min-h-[44px] inline-flex items-center px-1.5"
                 >
                   Create free account
                 </button>
@@ -338,8 +338,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onClick={() => {
                     setMode('signin');
                     setError(null);
-                                      }}
-                  className="font-bold text-[#0B1F3A] dark:text-[#D4AF37] hover:underline min-h-[36px] inline-flex items-center px-1"
+                  }}
+                  className="font-bold text-[#0B1F3A] dark:text-[#D4AF37] hover:underline min-h-[44px] inline-flex items-center px-1.5"
                 >
                   Sign in to existing account
                 </button>

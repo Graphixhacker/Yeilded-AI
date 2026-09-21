@@ -3,7 +3,7 @@ import { DelegateContext, User, Currency, TabType, ThemeMode } from './types';
 import { api } from './services/api';
 
 // Icons for mobile bottom nav
-import { FileText, Mic, Layers, BookOpen, Menu, MessageSquare } from 'lucide-react';
+import { FileText, Mic, Layers, Book, Menu, MessageSquare } from 'lucide-react';
 
 // Components
 import { Header } from './components/Header';
@@ -19,6 +19,7 @@ import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { PositionPaperTab } from './components/tabs/PositionPaperTab';
 import { SpeechWriterTab } from './components/tabs/SpeechWriterTab';
 import { ResolutionBuilderTab } from './components/tabs/ResolutionBuilderTab';
+import { StudyGuideTab } from './components/tabs/StudyGuideTab';
 import { RoPAssistantTab } from './components/tabs/RoPAssistantTab';
 import { ChatTab } from './components/tabs/ChatTab';
 import { PolicyResearchTab } from './components/tabs/PolicyResearchTab';
@@ -26,6 +27,7 @@ import { CrisisSimulatorTab } from './components/tabs/CrisisSimulatorTab';
 import { DebatePracticeTab } from './components/tabs/DebatePracticeTab';
 import { SettingsTab } from './components/tabs/SettingsTab';
 import { ArchivesTab } from './components/tabs/ArchivesTab';
+import { MoreTab } from './components/tabs/MoreTab';
 import { AdminDashboard } from './components/AdminDashboard';
 
 const DEFAULT_CONTEXT: DelegateContext = {
@@ -422,6 +424,17 @@ export default function App() {
                 />
               )}
 
+              {activeTab === 'study-guide' && (
+                <StudyGuideTab
+                  context={delegateContext}
+                  onUpdateContext={handleUpdatePartialContext}
+                  user={user}
+                  onOpenAuth={handleOpenAuth}
+                  onOpenPricing={() => setIsPricingOpen(true)}
+                  onNavigate={(tab) => setActiveTab(tab)}
+                />
+              )}
+
               {activeTab === 'rop-assistant' && (
                 <RoPAssistantTab
                   context={delegateContext}
@@ -487,6 +500,32 @@ export default function App() {
                   onOpenPricing={() => setIsPricingOpen(true)}
                   onUpdateUser={(u) => setUser(u)}
                   onNavigate={(tab) => setActiveTab(tab)}
+                />
+              )}
+              {activeTab === 'more' && (
+                <MoreTab
+                  user={user}
+                  context={delegateContext}
+                  onUpdateContext={handleUpdatePartialContext}
+                  onOpenContextModal={() => setIsOnboardingOpen(true)}
+                  isDarkMode={isDarkMode}
+                  onToggleDarkMode={handleToggleDarkMode}
+                  themeMode={themeMode}
+                  onSetThemeMode={handleSetThemeMode}
+                  currency={currency}
+                  onToggleCurrency={handleToggleCurrency}
+                  onOpenPricing={() => setIsPricingOpen(true)}
+                  onOpenAuth={handleOpenAuth}
+                  onLogout={handleLogout}
+                  onSelectTab={(tab) => {
+                    if (tab === 'pricing') {
+                      setIsPricingOpen(true);
+                    } else {
+                      setActiveTab(tab);
+                    }
+                  }}
+                  onOpenSidebar={() => setMobileSidebarOpen(true)}
+                  isAdmin={user?.email === 'abdulahad2010mine@gmail.com'}
                 />
               )}
               {activeTab === 'admin' && user?.email === 'abdulahad2010mine@gmail.com' && (
@@ -566,27 +605,35 @@ export default function App() {
               </button>
 
               <button
-                id="bottom-nav-rop-btn"
-                onClick={() => setActiveTab('rop-assistant')}
+                id="bottom-nav-study-guide-btn"
+                onClick={() => setActiveTab('study-guide')}
                 className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
-                  activeTab === 'rop-assistant'
+                  activeTab === 'study-guide'
                     ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
+                aria-label="Open Study Guide"
               >
-                {activeTab === 'rop-assistant' && (
+                {activeTab === 'study-guide' && (
                   <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
                 )}
-                <BookOpen className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] tracking-tight">RoP</span>
+                <Book className="w-5 h-5 mb-0.5" />
+                <span className="text-[10px] tracking-tight whitespace-nowrap">Study Guide</span>
               </button>
 
               <button
                 id="bottom-nav-menu-btn"
-                onClick={() => setMobileSidebarOpen(true)}
-                className="flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all touch-press"
-                aria-label="Open full diplomatic suite menu"
+                onClick={() => setActiveTab('more')}
+                className={`flex-1 min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all touch-press relative ${
+                  activeTab === 'more'
+                    ? 'text-[#0B1F3A] dark:text-[#D4AF37] font-bold bg-slate-100/70 dark:bg-white/5'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+                aria-label="Open More options and settings"
               >
+                {activeTab === 'more' && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-[#0B1F3A] dark:bg-[#D4AF37]"></span>
+                )}
                 <Menu className="w-5 h-5 mb-0.5" />
                 <span className="text-[10px] tracking-tight">More</span>
               </button>

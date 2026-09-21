@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { DelegateContext, User, PositionPaperDraft, SUPPORTED_LANGUAGES, SupportedLanguage } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { DelegateContext, User, PositionPaperDraft, SUPPORTED_LANGUAGES, SupportedLanguage, StudyGuide } from '../../types';
 import { UN_COMMITTEES, PAKISTAN_POLITICAL_PARTIES } from '../../data/unPresets';
 import { api } from '../../services/api';
 import { exportDocumentToPDF, exportDocumentToWord, copyToClipboard } from '../../utils/exportUtils';
@@ -23,7 +23,8 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
-  Search
+  Search,
+  BookMarked
 } from 'lucide-react';
 
 interface PositionPaperTabProps {
@@ -54,6 +55,24 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
   const [showCommitteePicker, setShowCommitteePicker] = useState(false);
   const [isStanceExpanded, setIsStanceExpanded] = useState(false);
   const [isGuidelinesExpanded, setIsGuidelinesExpanded] = useState(false);
+  const [activeGuide, setActiveGuide] = useState<StudyGuide | null>(null);
+  const [guideAppliedNotification, setGuideAppliedNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (user && context.committee) {
+      api.getStudyGuideForCommittee(context.committee)
+        .then((res) => {
+          if (isMounted) setActiveGuide(res.guide || null);
+        })
+        .catch(() => {
+          if (isMounted) setActiveGuide(null);
+        });
+    } else {
+      setActiveGuide(null);
+    }
+    return () => { isMounted = false; };
+  }, [user, context.committee]);
 
   const isFree = !user || user.tier === 'free';
   const freeLeft = user ? Math.max(0, 3 - user.generationsUsed) : 3;
@@ -124,6 +143,10 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
 
       if (res.result) {
         setGeneratedText(res.result);
+      }
+      if (res.guideApplied) {
+        setGuideAppliedNotification(res.guideName ? `Study guide for ${res.guideName} intelligence auto-injected into prompt.` : 'Study guide intelligence auto-injected into prompt.');
+        setTimeout(() => setGuideAppliedNotification(null), 7000);
       }
       if (res.user) {
         onUpdateUser(res.user);
@@ -351,6 +374,28 @@ export const PositionPaperTab: React.FC<PositionPaperTabProps> = ({
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-4 pointer-events-none" />
                 </div>
               </div>
+
+              {/* Active Study Guide Pill */}
+              {activeGuide && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <BookMarked className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="truncate">
+                      <strong>Study Guide Linked:</strong> {activeGuide.fileName || activeGuide.committeeName}
+                    </span>
+                  </div>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-800/60 text-emerald-900 dark:text-emerald-200 font-bold text-[10px] shrink-0">
+                    Auto-Injected
+                  </span>
+                </div>
+              )}
+
+              {guideAppliedNotification && (
+                <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span>{guideAppliedNotification}</span>
+                </div>
+              )}
 
               {/* Committee Mandate Info Pill */}
               {currentComm && (

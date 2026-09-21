@@ -361,14 +361,14 @@ export const RoPAssistantTab: React.FC<RoPAssistantTabProps> = ({
           </div>
 
           {/* Sample question chips */}
-          <div className="p-2.5 sm:p-3 bg-white dark:bg-[#071326] border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <div className="p-2.5 sm:p-3 bg-white dark:bg-[#071326] border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
             {sampleQuestions.map((sq, i) => (
               <button
                 key={i}
                 id={`btn-sample-question-${i}`}
                 type="button"
                 onClick={() => handleSendQuestion(sq)}
-                className="px-3 py-1.5 min-h-[38px] rounded-lg bg-slate-100 dark:bg-[#0b1b33] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium whitespace-nowrap transition-colors touch-press active:scale-98"
+                className="px-3.5 py-2 min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#0b1b33] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium whitespace-nowrap transition-colors touch-press active:scale-98 flex items-center"
               >
                 {sq}
               </button>

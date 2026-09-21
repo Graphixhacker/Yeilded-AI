@@ -19,7 +19,10 @@ import {
   Check, 
   ShieldAlert,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  BookOpen,
+  Laptop,
+  Menu
 } from 'lucide-react';
 import { 
   User, 
@@ -27,7 +30,8 @@ import {
   Currency, 
   SupportedLanguage, 
   SUPPORTED_LANGUAGES, 
-  TabType 
+  TabType,
+  ThemeMode
 } from '../../types';
 import { BottomSheetPicker } from '../BottomSheetPicker';
 
@@ -38,12 +42,15 @@ interface MoreTabProps {
   onOpenContextModal: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  themeMode?: ThemeMode;
+  onSetThemeMode?: (mode: ThemeMode) => void;
   currency: Currency;
   onToggleCurrency: () => void;
   onOpenPricing: () => void;
   onOpenAuth: () => void;
   onLogout: () => void;
   onSelectTab: (tab: TabType) => void;
+  onOpenSidebar?: () => void;
   isAdmin?: boolean;
 }
 
@@ -54,12 +61,15 @@ export const MoreTab: React.FC<MoreTabProps> = ({
   onOpenContextModal,
   isDarkMode,
   onToggleDarkMode,
+  themeMode = 'system',
+  onSetThemeMode,
   currency,
   onToggleCurrency,
   onOpenPricing,
   onOpenAuth,
   onLogout,
   onSelectTab,
+  onOpenSidebar,
   isAdmin
 }) => {
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
@@ -146,29 +156,69 @@ export const MoreTab: React.FC<MoreTabProps> = ({
           Conference Preferences
         </h3>
 
-        {/* Theme Row */}
-        <button
-          id="btn-more-theme-toggle"
-          onClick={onToggleDarkMode}
-          className="w-full flex items-center justify-between p-3 min-h-[48px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-left"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+        {/* Theme Mode Selector (3 States: Light, Dark, System) */}
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-2xs border border-slate-200/60 dark:border-slate-700/60">
+                {isDarkMode ? <Moon className="w-4 h-4 text-[#D4AF37]" /> : <Sun className="w-4 h-4 text-amber-500" />}
+              </div>
+              <div>
+                <span className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 block">
+                  Appearance Theme
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {themeMode === 'system' ? 'Device System Default' : themeMode === 'dark' ? 'Dark Mode (Caucus Night)' : 'Light Mode (Standard UN)'}
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-base font-semibold text-slate-800 dark:text-slate-200 block">
-                Appearance
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {isDarkMode ? 'Dark Mode (Caucus Night)' : 'Light Mode (Standard UN)'}
-              </span>
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4AF37] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+              {themeMode}
+            </span>
           </div>
-          <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-            {isDarkMode ? 'Dark' : 'Light'}
-          </span>
-        </button>
+
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+            <button
+              id="btn-more-theme-light"
+              type="button"
+              onClick={() => onSetThemeMode ? onSetThemeMode('light') : onToggleDarkMode()}
+              className={`min-h-[44px] py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-97 ${
+                themeMode === 'light'
+                  ? 'bg-[#141B3D] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Sun className="w-4 h-4 text-amber-400" />
+              <span>Light</span>
+            </button>
+            <button
+              id="btn-more-theme-dark"
+              type="button"
+              onClick={() => onSetThemeMode ? onSetThemeMode('dark') : onToggleDarkMode()}
+              className={`min-h-[44px] py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-97 ${
+                themeMode === 'dark'
+                  ? 'bg-[#141B3D] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0B1F3A] shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Moon className="w-4 h-4" />
+              <span>Dark</span>
+            </button>
+            <button
+              id="btn-more-theme-system"
+              type="button"
+              onClick={() => onSetThemeMode ? onSetThemeMode('system') : onToggleDarkMode()}
+              className={`min-h-[44px] py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-97 ${
+                themeMode === 'system'
+                  ? 'bg-[#141B3D] text-white dark:bg-slate-700 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Laptop className="w-4 h-4" />
+              <span>Auto</span>
+            </button>
+          </div>
+        </div>
 
         {/* Language Row */}
         <button
@@ -296,6 +346,7 @@ export const MoreTab: React.FC<MoreTabProps> = ({
         </h3>
 
         {[
+          { id: 'rop-assistant', label: 'Rules of Procedure (RoP)', desc: 'Motions cheat sheet & parliamentary AI', icon: BookOpen },
           { id: 'chat', label: 'AI Diplomatic Chat', desc: 'Real-time DeepSeek MUN advice & tactics', icon: MessageSquare },
           { id: 'policy-research', label: 'Policy Research Dossier', desc: 'Country dossiers, red lines & leverage', icon: Globe },
           { id: 'crisis-simulator', label: 'Crisis Directive Simulator', desc: 'Backroom covert actions & feedback', icon: Zap },

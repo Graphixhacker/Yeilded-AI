@@ -173,12 +173,36 @@ export type TabType =
   | 'position-paper'
   | 'speech-writer'
   | 'clause-builder'
+  | 'study-guide'
   | 'rop-assistant'
   | 'policy-research'
   | 'crisis-simulator'
   | 'debate-practice'
   | 'archives'
   | 'pricing' | 'admin' | 'settings' | 'more';
+
+export interface StudyGuideSummary {
+  rules_of_procedure: string;
+  key_facts: string;
+  existing_laws_and_gaps: string;
+  past_events: string;
+  questions_to_answer: string;
+}
+
+export interface StudyGuide {
+  id: string;
+  userId: string;
+  committeeId: string;
+  committeeName: string;
+  topic?: string;
+  fileName?: string;
+  fileSize?: number;
+  pageCount?: number;
+  rawText: string;
+  summary: StudyGuideSummary;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
