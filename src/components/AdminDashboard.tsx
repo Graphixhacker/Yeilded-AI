@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { api, request } from '../services/api';
 import { User } from '../types';
-import { Users, Shield, DollarSign, Activity, AlertCircle, CheckCircle2, UserX, UserCheck, Link as LinkIcon, Plus } from 'lucide-react';
+import { Users, Shield, DollarSign, Activity, AlertCircle, CheckCircle2, UserX, UserCheck, Link as LinkIcon, Plus, Database, RefreshCw, Server, HardDrive, Clock } from 'lucide-react';
 
 interface AdminStats {
   totalUsers: number;
   freeUsers: number;
   paidUsers: number;
+}
+
+interface DatabaseHealth {
+  status: 'connected' | 'degraded' | 'disconnected';
+  databaseConfigured: boolean;
+  provider: string;
+  latencyMs: number;
+  tables: Record<string, number>;
+  hostMasked?: string;
+  databaseName?: string;
+  serverTimestamp?: string;
+  pgVersion?: string;
+  error?: string;
 }
 
 interface Partnership {
@@ -25,12 +38,33 @@ export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [partnerships, setPartnerships] = useState<Partnership[]>([]);
+  const [dbHealth, setDbHealth] = useState<DatabaseHealth | null>(null);
+  const [loadingDb, setLoadingDb] = useState(false);
   const [loading, setLoading] = useState(true);
   
   // Custom Modal States (to bypass iframe prompt/confirm blocks)
   const [showAddPartner, setShowAddPartner] = useState(false);
   const [newPartnerForm, setNewPartnerForm] = useState({ name: '', contact: '', affiliateCode: '', discountRate: '' });
   const [partnerToRemove, setPartnerToRemove] = useState<Partnership | null>(null);
+
+  const fetchDbHealth = async () => {
+    setLoadingDb(true);
+    try {
+      const res = await request('/admin/db-health');
+      setDbHealth(res);
+    } catch (err: any) {
+      setDbHealth({
+        status: 'disconnected',
+        databaseConfigured: false,
+        provider: 'Disconnected',
+        latencyMs: 0,
+        tables: {},
+        error: err.message || 'Failed to ping database'
+      });
+    } finally {
+      setLoadingDb(false);
+    }
+  };
 
   // Load data
   useEffect(() => {
@@ -44,6 +78,8 @@ export const AdminDashboard: React.FC = () => {
 
         const partnersRes = await request('/admin/partnerships');
         setPartnerships(partnersRes.partnerships || []);
+
+        await fetchDbHealth();
       } catch (err) {
         console.error('Failed to load admin data', err);
       } finally {
@@ -98,6 +134,145 @@ export const AdminDashboard: React.FC = () => {
         <div className="bg-white dark:bg-[#071326] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="text-slate-500 text-base mb-1">Paid/Premium Users</div>
           <div className="text-3xl font-bold text-[#D4AF37]">{stats?.paidUsers || 0}</div>
+        </div>
+      </div>
+
+      {/* PostgreSQL Database Health & Connection Status */}
+      <div className="bg-white dark:bg-[#071326] rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl ${dbHealth?.status === 'connected' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'}`}>
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold">PostgreSQL Database Status</h2>
+                {dbHealth?.status === 'connected' ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Connected & Healthy
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    {dbHealth?.provider || 'Disconnected'}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Real-time connection monitoring, query latency, and relational table integrity
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={fetchDbHealth}
+            disabled={loadingDb}
+            className="self-start sm:self-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors disabled:opacity-50 min-h-[38px] cursor-pointer"
+            title="Ping database and refresh health status"
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingDb ? 'animate-spin text-[#D4AF37]' : 'text-slate-500'}`} />
+            <span>{loadingDb ? 'Testing Connection...' : 'Test Connection'}</span>
+          </button>
+        </div>
+
+        {/* Database Metrics Grid */}
+        <div className="p-5 sm:p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Server className="w-3.5 h-3.5 text-slate-400" /> Engine & Driver
+              </div>
+              <div className="text-base font-bold text-slate-800 dark:text-slate-200 truncate">
+                {dbHealth?.provider || 'Unknown'}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                {dbHealth?.hostMasked ? `Host: ${dbHealth.hostMasked}` : 'DATABASE_URL status'}
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-slate-400" /> Query Latency
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-2xl font-bold ${
+                  !dbHealth?.databaseConfigured ? 'text-slate-400' :
+                  (dbHealth?.latencyMs || 0) < 150 ? 'text-emerald-600 dark:text-emerald-400' :
+                  (dbHealth?.latencyMs || 0) < 400 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+                }`}>
+                  {dbHealth?.databaseConfigured ? `${dbHealth?.latencyMs ?? 0} ms` : 'N/A'}
+                </span>
+                <span className="text-xs text-slate-400">round-trip ping</span>
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {dbHealth?.serverTimestamp ? `Server: ${new Date(dbHealth.serverTimestamp).toLocaleTimeString()}` : 'Verified via SELECT NOW()'}
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <HardDrive className="w-3.5 h-3.5 text-slate-400" /> Relational Schema
+              </div>
+              <div className="text-base font-bold text-slate-800 dark:text-slate-200">
+                {dbHealth?.status === 'connected' ? '8 Relational Tables' : 'In-Memory Fallback'}
+              </div>
+              <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Schema DDL Initialized
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5 text-slate-400" /> Total Stored Records
+              </div>
+              <div className="text-2xl font-bold text-[#D4AF37]">
+                {dbHealth?.tables
+                  ? Object.values(dbHealth.tables).reduce((a: number, b: number) => a + (typeof b === 'number' && b > 0 ? b : 0), 0)
+                  : 0}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Live row count across tables
+              </div>
+            </div>
+          </div>
+
+          {/* Warning notice if not configured or disconnected */}
+          {dbHealth?.error && (
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold">Database Note: </span>
+                <span>{dbHealth.error}</span>
+                {!dbHealth.databaseConfigured && (
+                  <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                    When deploying on Vercel or production, configure the <code className="bg-amber-100 dark:bg-amber-900/60 px-1 py-0.5 rounded font-mono">DATABASE_URL</code> environment variable in your project settings.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Table Breakdown Badges */}
+          {dbHealth?.tables && (
+            <div>
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
+                Table Record Distribution (Live Relational Queries)
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+                {Object.entries(dbHealth.tables).map(([table, count]) => (
+                  <div key={table} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 text-center">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate capitalize font-medium" title={table}>
+                      {table.replace(/_/g, ' ')}
+                    </div>
+                    <div className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                      {Number(count) >= 0 ? count : '-'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

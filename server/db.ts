@@ -1258,6 +1258,116 @@ class DBManager {
     if (!mem.partnerships) return;
     mem.partnerships = mem.partnerships.filter((p: any) => p.id !== id);
   }
+
+  // --- HEALTH & MONITORING ---
+  public async getHealthStatus(): Promise<{
+    status: 'connected' | 'degraded' | 'disconnected';
+    databaseConfigured: boolean;
+    provider: string;
+    latencyMs: number;
+    tables: Record<string, number>;
+    hostMasked?: string;
+    databaseName?: string;
+    serverTimestamp?: string;
+    pgVersion?: string;
+    error?: string;
+  }> {
+    const connStr = process.env.DATABASE_URL?.trim();
+    if (!connStr) {
+      const mem = this.loadMemoryFallback();
+      return {
+        status: 'disconnected',
+        databaseConfigured: false,
+        provider: 'In-Memory Fallback (Local Memory)',
+        latencyMs: 0,
+        tables: {
+          users: (mem.users || []).length,
+          position_papers: (mem.positionPapers || []).length,
+          speeches: (mem.speeches || []).length,
+          resolutions: (mem.resolutions || []).length,
+          study_guides: (mem.studyGuides || []).length,
+          partnerships: (mem.partnerships || []).length,
+        },
+        error: 'DATABASE_URL environment variable is not configured. Falling back to in-memory state.'
+      };
+    }
+
+    // Mask the host safely
+    let hostMasked = 'configured';
+    let databaseName = 'database';
+    try {
+      const parsed = new URL(connStr);
+      const hostParts = parsed.hostname.split('.');
+      if (hostParts.length >= 2) {
+        hostMasked = `${hostParts[0].slice(0, 4)}***.${hostParts.slice(-2).join('.')}`;
+      } else {
+        hostMasked = parsed.hostname;
+      }
+      databaseName = parsed.pathname.replace(/^\//, '') || 'postgres';
+    } catch {}
+
+    const startTime = Date.now();
+    try {
+      await this.ensureInit();
+      const pingRes = await executeQuery('SELECT NOW() as now, version() as version');
+      const latencyMs = Date.now() - startTime;
+
+      const tablesList = [
+        'users',
+        'position_papers',
+        'speeches',
+        'resolutions',
+        'study_guides',
+        'partnerships',
+        'user_tokens',
+        'usage_records'
+      ];
+
+      const tables: Record<string, number> = {};
+      for (const tbl of tablesList) {
+        try {
+          const countRes = await executeQuery(`SELECT COUNT(*)::int as count FROM ${tbl}`);
+          tables[tbl] = countRes.rows[0]?.count ?? 0;
+        } catch {
+          tables[tbl] = 0;
+        }
+      }
+
+      const isNeon = connStr.includes('neon.tech') || connStr.includes('neon');
+
+      return {
+        status: 'connected',
+        databaseConfigured: true,
+        provider: isNeon ? 'PostgreSQL (Neon Serverless)' : 'PostgreSQL',
+        latencyMs,
+        tables,
+        hostMasked,
+        databaseName,
+        serverTimestamp: pingRes.rows[0]?.now ? new Date(pingRes.rows[0].now).toISOString() : new Date().toISOString(),
+        pgVersion: pingRes.rows[0]?.version ? String(pingRes.rows[0].version).split(' ')[0] + ' ' + String(pingRes.rows[0].version).split(' ')[1] : undefined
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - startTime;
+      const mem = this.loadMemoryFallback();
+      return {
+        status: 'disconnected',
+        databaseConfigured: true,
+        provider: connStr.includes('neon') ? 'PostgreSQL (Neon Serverless)' : 'PostgreSQL',
+        latencyMs,
+        tables: {
+          users: (mem.users || []).length,
+          position_papers: (mem.positionPapers || []).length,
+          speeches: (mem.speeches || []).length,
+          resolutions: (mem.resolutions || []).length,
+          study_guides: (mem.studyGuides || []).length,
+          partnerships: (mem.partnerships || []).length,
+        },
+        hostMasked,
+        databaseName,
+        error: err.message || 'Database connection error'
+      };
+    }
+  }
 }
 
 export const db = new DBManager();

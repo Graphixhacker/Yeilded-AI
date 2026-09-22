@@ -102,6 +102,19 @@ apiRouter.get('/admin/stats', isAdmin, async (req: any, res: any) => {
   }
 });
 
+apiRouter.get('/admin/db-health', isAdmin, async (req: any, res: any) => {
+  try {
+    const health = await db.getHealthStatus();
+    res.json(health);
+  } catch (err: any) {
+    res.status(500).json({
+      status: 'disconnected',
+      databaseConfigured: Boolean(process.env.DATABASE_URL?.trim()),
+      error: err.message || 'Failed to check database health'
+    });
+  }
+});
+
 apiRouter.get('/admin/users', isAdmin, async (req: any, res: any) => {
   try {
     const users = await db.getAllUsers();

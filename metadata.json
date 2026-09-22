@@ -1,6 +1,6 @@
 {
   "name": "Yeilded",
-  "description": "AI-powered Model United Nations toolkit for delegates: Position Paper Generator, Speech Writer, Clause Builder, RoP Assistant, Policy Research, Crisis Simulator, and Debate Practice.",
+  "description": "Draft award-winning Model UN position papers, speeches, resolution clauses, and study guides with Yeilded's AI diplomatic suite built for delegates.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
