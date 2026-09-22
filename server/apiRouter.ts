@@ -1,11 +1,11 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import { db } from './db.ts';
+import { db } from './db.js';
 import crypto from 'crypto';
-import { sendPasswordResetEmail } from './emailService.ts';
-import { callDeepSeekOrFallback, callDeepSeekChat } from './aiService.ts';
-import { extractPdfText, summarizeStudyGuide } from './studyGuideService.ts';
-import type { StudyGuide } from '../src/types/index.ts';
+import { sendPasswordResetEmail } from './emailService.js';
+import { callDeepSeekOrFallback, callDeepSeekChat } from './aiService.js';
+import { extractPdfText, summarizeStudyGuide } from './studyGuideService.js';
+import type { StudyGuide } from '../src/types/index.js';
 
 export const apiRouter = express.Router();
 
@@ -58,15 +58,19 @@ apiRouter.use((req: any, res: any, next: express.NextFunction) => {
 });
 
 // Middleware to extract user from Authorization header
-function authenticate(req: Request, res: Response, next: express.NextFunction) {
+async function authenticate(req: Request, res: Response, next: express.NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next();
   }
   const token = authHeader.split(' ')[1];
-  const user = db.getUserByToken(token);
-  if (user) {
-    (req as any).user = user;
+  try {
+    const user = await db.getUserByToken(token);
+    if (user) {
+      (req as any).user = user;
+    }
+  } catch (err) {
+    console.error('[AUTH ERROR]', err);
   }
   next();
 }
@@ -87,82 +91,97 @@ const isAdmin = (req: any, res: any, next: any) => {
   next();
 };
 
-apiRouter.get('/admin/stats', isAdmin, (req: any, res: any) => {
-  const users = (db as any).getAllUsers ? (db as any).getAllUsers() : [];
-  const freeUsers = users.filter((u: any) => u.tier === 'free').length;
-  const paidUsers = users.length - freeUsers;
-  res.json({ totalUsers: users.length, freeUsers, paidUsers });
+apiRouter.get('/admin/stats', isAdmin, async (req: any, res: any) => {
+  try {
+    const users = await db.getAllUsers();
+    const freeUsers = users.filter((u: any) => u.tier === 'free').length;
+    const paidUsers = users.length - freeUsers;
+    res.json({ totalUsers: users.length, freeUsers, paidUsers });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
+  }
 });
 
-apiRouter.get('/admin/users', isAdmin, (req: any, res: any) => {
-  const users = (db as any).getAllUsers ? (db as any).getAllUsers() : [];
-  res.json({ users });
+apiRouter.get('/admin/users', isAdmin, async (req: any, res: any) => {
+  try {
+    const users = await db.getAllUsers();
+    res.json({ users });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
+  }
 });
 
-apiRouter.post('/admin/users/:id/tier', isAdmin, (req: any, res: any) => {
+apiRouter.post('/admin/users/:id/tier', isAdmin, async (req: any, res: any) => {
   const { id } = req.params;
   const { tier } = req.body;
   if (!['free', '1week', 'monthly'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
   
-  if ((db as any).updateUserTier) {
-     (db as any).updateUserTier(id, tier);
+  try {
+    await db.updateUserTier(id, tier);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
   }
-  res.json({ success: true });
 });
 
-apiRouter.post('/admin/users/:id/ban', isAdmin, (req: any, res: any) => {
+apiRouter.post('/admin/users/:id/ban', isAdmin, async (req: any, res: any) => {
   const { id } = req.params;
   const { banned } = req.body;
-  if ((db as any).setUserBanned) {
-     (db as any).setUserBanned(id, banned);
-  }
-  res.json({ success: true });
-});
-
-apiRouter.get('/admin/partnerships', isAdmin, (req: any, res: any) => {
-  const partnerships = (db as any).getPartnerships ? (db as any).getPartnerships() : [];
-  res.json({ partnerships });
-});
-
-apiRouter.post('/admin/partnerships', isAdmin, (req: any, res: any) => {
-  if ((db as any).addPartnership) {
-    const p = (db as any).addPartnership(req.body);
-    res.json(p);
-  } else {
-    res.status(500).json({ error: 'DB method missing' });
-  }
-});
-
-
-apiRouter.delete('/admin/partnerships/:id', isAdmin, (req: any, res: any) => {
-  const { id } = req.params;
-  if ((db as any).deletePartnership) {
-    (db as any).deletePartnership(id);
+  try {
+    await db.setUserBanned(id, banned);
     res.json({ success: true });
-  } else {
-    res.status(500).json({ error: 'DB method missing' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
   }
 });
 
-apiRouter.post('/user/profile', (req: Request, res: Response) => {
+apiRouter.get('/admin/partnerships', isAdmin, async (req: any, res: any) => {
+  try {
+    const partnerships = await db.getPartnerships();
+    res.json({ partnerships });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
+  }
+});
+
+apiRouter.post('/admin/partnerships', isAdmin, async (req: any, res: any) => {
+  try {
+    const p = await db.addPartnership(req.body);
+    res.json(p);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
+  }
+});
+
+apiRouter.delete('/admin/partnerships/:id', isAdmin, async (req: any, res: any) => {
+  const { id } = req.params;
+  try {
+    await db.deletePartnership(id);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
+  }
+});
+
+apiRouter.post('/user/profile', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
   
-  if ((db as any).updateUserProfile) {
-    const updatedUser = (db as any).updateUserProfile(user.id, name);
+  try {
+    const updatedUser = await db.updateUserProfile(user.id, name);
     res.json({ user: updatedUser });
-  } else {
-    res.status(500).json({ error: 'DB method missing' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Database error' });
   }
 });
 
 
 // --- CHATBOT ENDPOINTS ---
-apiRouter.get('/chat/usage', (req: Request, res: Response) => {
+apiRouter.get('/chat/usage', async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const usage = db.getChatUsage(user?.id);
+  const usage = await db.getChatUsage(user?.id);
   res.json(usage);
 });
 
@@ -174,7 +193,7 @@ apiRouter.post('/chat', async (req: any, res: any) => {
     }
     
     const user = req.user;
-    const usage = db.checkAndIncrementChatUsage(user?.id);
+    const usage = await db.checkAndIncrementChatUsage(user?.id);
     if (!usage.allowed) {
       return res.status(403).json({
         error: usage.reason || 'Chat limit reached',
@@ -200,7 +219,7 @@ apiRouter.post('/chat', async (req: any, res: any) => {
 });
 
 // --- AUTH ENDPOINTS ---
-apiRouter.post('/auth/register', (req: Request, res: Response) => {
+apiRouter.post('/auth/register', async (req: Request, res: Response) => {
   try {
     const { email, name, password, affiliateCode } = req.body;
     if (!email || !password) {
@@ -219,13 +238,13 @@ apiRouter.post('/auth/register', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
-    const existing = db.getUserByEmail(cleanEmail);
+    const existing = await db.getUserByEmail(cleanEmail);
     if (existing) {
       return res.status(409).json({ error: 'An account with this email already exists. Please sign in.' });
     }
 
     const delegateName = name ? String(name).trim() : cleanEmail.split('@')[0];
-    const { user, token } = db.createUser(cleanEmail, delegateName, cleanPass, affiliateCode);
+    const { user, token } = await db.createUser(cleanEmail, delegateName, cleanPass, affiliateCode);
     console.log(`[AUTH] Successfully registered new user: ${cleanEmail} (${user.id})`);
     res.json({ user, token });
   } catch (err: any) {
@@ -234,7 +253,7 @@ apiRouter.post('/auth/register', (req: Request, res: Response) => {
   }
 });
 
-apiRouter.post('/auth/login', (req: Request, res: Response) => {
+apiRouter.post('/auth/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -242,8 +261,8 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
     }
 
     const cleanEmail = String(email).trim().toLowerCase();
-    const user = db.getUserByEmail(cleanEmail);
-    if (!user || !db.verifyPassword(user.id, String(password))) {
+    const user = await db.getUserByEmail(cleanEmail);
+    if (!user || !(await db.verifyPassword(user.id, String(password)))) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -251,7 +270,7 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
       return res.status(403).json({ error: 'This account has been suspended. Please contact support.' });
     }
 
-    const token = db.createTokenForUser(user.id);
+    const token = await db.createTokenForUser(user.id);
     console.log(`[AUTH] User logged in: ${cleanEmail} (${user.id})`);
     res.json({ user, token });
   } catch (err: any) {
@@ -311,7 +330,7 @@ apiRouter.post('/auth/forgot-password', async (req: Request, res: Response) => {
   };
 
   try {
-    const user = db.getUserByEmail(cleanEmail);
+    const user = await db.getUserByEmail(cleanEmail);
 
     // If user does not exist or is banned, do NOT send link, but still return generic success message
     if (!user || (user as any).banned) {
@@ -326,7 +345,7 @@ apiRouter.post('/auth/forgot-password', async (req: Request, res: Response) => {
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = Date.now() + 30 * 60 * 1000; // 30 minutes expiry
 
-    db.savePasswordResetToken({
+    await db.savePasswordResetToken({
       tokenHash,
       userId: user.id,
       expiresAt,
@@ -353,14 +372,14 @@ apiRouter.post('/auth/forgot-password', async (req: Request, res: Response) => {
 });
 
 // 2. Validate Password Reset Token before rendering reset form
-apiRouter.get('/auth/validate-reset-token', (req: Request, res: Response) => {
+apiRouter.get('/auth/validate-reset-token', async (req: Request, res: Response) => {
   const { token } = req.query;
   if (!token || typeof token !== 'string') {
     return res.status(400).json({ valid: false, error: 'Token is missing or invalid.' });
   }
 
   const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
-  const record = db.getPasswordResetToken(tokenHash);
+  const record = await db.getPasswordResetToken(tokenHash);
 
   if (!record) {
     return res.status(404).json({ valid: false, error: 'Invalid or non-existent password reset link.' });
@@ -374,7 +393,7 @@ apiRouter.get('/auth/validate-reset-token', (req: Request, res: Response) => {
     return res.status(410).json({ valid: false, error: 'This password reset link has expired. Reset links are valid for 30 minutes.' });
   }
 
-  const user = db.getUser(record.userId);
+  const user = await db.getUser(record.userId);
   if (!user) {
     return res.status(404).json({ valid: false, error: 'The account associated with this link was not found.' });
   }
@@ -392,7 +411,7 @@ apiRouter.get('/auth/validate-reset-token', (req: Request, res: Response) => {
 });
 
 // 3. Complete Password Reset
-apiRouter.post('/auth/reset-password', (req: Request, res: Response) => {
+apiRouter.post('/auth/reset-password', async (req: Request, res: Response) => {
   const { token, password } = req.body;
   if (!token || typeof token !== 'string') {
     return res.status(400).json({ error: 'Reset token is required.' });
@@ -408,7 +427,7 @@ apiRouter.post('/auth/reset-password', (req: Request, res: Response) => {
   }
 
   const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
-  const record = db.getPasswordResetToken(tokenHash);
+  const record = await db.getPasswordResetToken(tokenHash);
 
   if (!record) {
     return res.status(404).json({ error: 'Invalid or non-existent password reset link.' });
@@ -422,7 +441,7 @@ apiRouter.post('/auth/reset-password', (req: Request, res: Response) => {
     return res.status(410).json({ error: 'This password reset link has expired. Please request a new one.' });
   }
 
-  const user = db.getUser(record.userId);
+  const user = await db.getUser(record.userId);
   if (!user) {
     return res.status(404).json({ error: 'The account associated with this token was not found.' });
   }
@@ -432,10 +451,10 @@ apiRouter.post('/auth/reset-password', (req: Request, res: Response) => {
   }
 
   // Mark token as used
-  db.markPasswordResetTokenUsed(tokenHash);
+  await db.markPasswordResetTokenUsed(tokenHash);
 
   // Update password in DB & invalidate all existing active sessions
-  db.updateUserPassword(user.id, cleanPass);
+  await db.updateUserPassword(user.id, cleanPass);
 
   console.log(`[PASSWORD RESET] Successfully updated password and invalidated sessions for user: ${user.email}`);
 
@@ -446,17 +465,17 @@ apiRouter.post('/auth/reset-password', (req: Request, res: Response) => {
 });
 
 
-apiRouter.get('/auth/me', (req: Request, res: Response) => {
+apiRouter.get('/auth/me', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
-  const freshUser = db.getUser(user.id);
-  res.json({ user: freshUser });
+  const freshUser = await db.getUser(user.id);
+  res.json({ user: freshUser || user });
 });
 
 // --- SUBSCRIPTIONS & PASSES ---
-apiRouter.post('/user/subscription', (req: Request, res: Response) => {
+apiRouter.post('/user/subscription', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) {
     return res.status(401).json({ error: 'Authentication required to activate pass' });
@@ -467,53 +486,53 @@ apiRouter.post('/user/subscription', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Invalid subscription tier' });
   }
 
-  const updatedUser = db.updateUserTier(user.id, tier);
+  const updatedUser = await db.updateUserTier(user.id, tier);
   console.log(`[PASS ACTIVATED] User ${user.email} activated tier: ${tier} via ${paymentMethod || 'standard'} (${currency || 'USD'} ${amount || 0})`);
   res.json({ user: updatedUser, success: true, message: `Activated ${tier} successfully` });
 });
 
 // --- DRAFTS ---
-apiRouter.get('/drafts', (req: Request, res: Response) => {
+apiRouter.get('/drafts', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
-  const papers = db.getPositionPapers(user.id);
-  const speeches = db.getSpeeches(user.id);
-  const resolutions = db.getResolutions(user.id);
+  const papers = await db.getPositionPapers(user.id);
+  const speeches = await db.getSpeeches(user.id);
+  const resolutions = await db.getResolutions(user.id);
   res.json({ papers, speeches, resolutions });
 });
 
-apiRouter.post('/drafts/paper', (req: Request, res: Response) => {
+apiRouter.post('/drafts/paper', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) return res.status(401).json({ error: 'Authentication required' });
 
   const draft = { ...req.body, userId: user.id, updatedAt: new Date().toISOString() };
   if (!draft.id) draft.id = 'paper_' + Date.now();
-  const saved = db.savePositionPaper(draft);
+  const saved = await db.savePositionPaper(draft);
   res.json({ paper: saved });
 });
 
-apiRouter.post('/drafts/speech', (req: Request, res: Response) => {
+apiRouter.post('/drafts/speech', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) return res.status(401).json({ error: 'Authentication required' });
 
   const draft = { ...req.body, userId: user.id, updatedAt: new Date().toISOString() };
   if (!draft.id) draft.id = 'speech_' + Date.now();
-  const saved = db.saveSpeech(draft);
+  const saved = await db.saveSpeech(draft);
   res.json({ speech: saved });
 });
 
 // --- STUDY GUIDES ENDPOINTS ---
 
 // List all study guides for the authenticated user
-apiRouter.get('/study-guides', (req: Request, res: Response) => {
+apiRouter.get('/study-guides', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) {
     return res.status(401).json({ error: 'Please sign in to view your Study Guides.' });
   }
-  const guides = db.getStudyGuides(user.id);
-  const gate = db.canAddStudyGuide(user.id);
+  const guides = await db.getStudyGuides(user.id);
+  const gate = await db.canAddStudyGuide(user.id);
   res.json({
     guides,
     limit: gate.limit,
@@ -524,11 +543,11 @@ apiRouter.get('/study-guides', (req: Request, res: Response) => {
 });
 
 // Check if an active guide exists for a given committee
-apiRouter.get('/study-guides/for-committee', (req: Request, res: Response) => {
+apiRouter.get('/study-guides/for-committee', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) return res.json({ guide: null });
   const committee = (req.query.committee as string) || '';
-  const guide = db.findStudyGuideForCommittee(user.id, committee);
+  const guide = await db.findStudyGuideForCommittee(user.id, committee);
   res.json({ guide: guide || null });
 });
 
@@ -540,7 +559,7 @@ apiRouter.post('/study-guides', async (req: Request, res: Response) => {
   }
 
   // Plan gating: Free = 1, Paid = 5
-  const gate = db.canAddStudyGuide(user.id);
+  const gate = await db.canAddStudyGuide(user.id);
   if (!gate.allowed) {
     return res.status(403).json({
       error: gate.reason || 'Plan limit reached.',
@@ -604,9 +623,9 @@ apiRouter.post('/study-guides', async (req: Request, res: Response) => {
       updatedAt: new Date().toISOString()
     };
 
-    const saved = db.saveStudyGuide(guide);
-    const allGuides = db.getStudyGuides(user.id);
-    const newGate = db.canAddStudyGuide(user.id);
+    const saved = await db.saveStudyGuide(guide);
+    const allGuides = await db.getStudyGuides(user.id);
+    const newGate = await db.canAddStudyGuide(user.id);
 
     return res.json({
       guide: saved,
@@ -623,14 +642,14 @@ apiRouter.post('/study-guides', async (req: Request, res: Response) => {
 });
 
 // Update a study guide summary or details
-apiRouter.put('/study-guides/:id', (req: Request, res: Response) => {
+apiRouter.put('/study-guides/:id', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) return res.status(401).json({ error: 'Authentication required' });
 
   const { id } = req.params;
   const { summary, topic, committeeName, committeeId } = req.body;
 
-  const updated = db.updateStudyGuide(id, user.id, {
+  const updated = await db.updateStudyGuide(id, user.id, {
     ...(summary ? { summary } : {}),
     ...(topic !== undefined ? { topic } : {}),
     ...(committeeName ? { committeeName } : {}),
@@ -645,18 +664,18 @@ apiRouter.put('/study-guides/:id', (req: Request, res: Response) => {
 });
 
 // Delete a study guide
-apiRouter.delete('/study-guides/:id', (req: Request, res: Response) => {
+apiRouter.delete('/study-guides/:id', async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) return res.status(401).json({ error: 'Authentication required' });
 
   const { id } = req.params;
-  const deleted = db.deleteStudyGuide(id, user.id);
+  const deleted = await db.deleteStudyGuide(id, user.id);
   if (!deleted) {
     return res.status(404).json({ error: 'Study guide not found or unauthorized' });
   }
 
-  const allGuides = db.getStudyGuides(user.id);
-  const newGate = db.canAddStudyGuide(user.id);
+  const allGuides = await db.getStudyGuides(user.id);
+  const newGate = await db.canAddStudyGuide(user.id);
   res.json({
     success: true,
     guides: allGuides,
@@ -667,9 +686,9 @@ apiRouter.delete('/study-guides/:id', (req: Request, res: Response) => {
 });
 
 // --- STUDY GUIDE PROMPT INJECTION HELPER ---
-function getStudyGuideInjection(userId: string, committee?: string): { prompt: string; guide: StudyGuide | null } {
+async function getStudyGuideInjection(userId: string, committee?: string): Promise<{ prompt: string; guide: StudyGuide | null }> {
   if (!committee || !committee.trim()) return { prompt: '', guide: null };
-  const guide = db.findStudyGuideForCommittee(userId, committee);
+  const guide = await db.findStudyGuideForCommittee(userId, committee);
   if (!guide || !guide.summary) return { prompt: '', guide: null };
 
   const prompt = `\n\n<guide>
@@ -734,7 +753,7 @@ apiRouter.post('/ai/generate', async (req: Request, res: Response) => {
   const languagePrompt = getLanguageInstruction(payload.language);
 
   // Check rate limit and free tier limits
-  const check = db.checkAndIncrementUsage(user.id, feature);
+  const check = await db.checkAndIncrementUsage(user.id, feature);
   if (!check.allowed) {
     return res.status(403).json({
       error: check.reason,
@@ -748,7 +767,7 @@ apiRouter.post('/ai/generate', async (req: Request, res: Response) => {
 
     if (feature === 'position-paper') {
       const { country, committee, topic, stancePoints, delegateName } = payload;
-      const guideInfo = getStudyGuideInjection(user.id, committee);
+      const guideInfo = await getStudyGuideInjection(user.id, committee);
       const commStr = (committee || '').toLowerCase();
       const isPNA = commStr.includes('pakistan') || commStr.includes('pna') || commStr.includes('national assembly');
       const isUNICEF = commStr.includes('unicef') || commStr.includes('children');
@@ -896,9 +915,10 @@ Formulate 3-4 innovative, realistic, and legally sound operative proposals (200-
 
       const fullSystemPrompt = `${systemPrompt}${guideInfo.prompt}\n\n${languagePrompt}`;
       result = await callDeepSeekOrFallback(fullSystemPrompt, userPrompt, { temperature: 0.65, max_tokens: 3000 });
+      const freshUser = await db.getUser(user.id);
       return res.json({
         result,
-        user: db.getUser(user.id),
+        user: freshUser || user,
         guideApplied: Boolean(guideInfo.guide),
         guideName: guideInfo.guide?.committeeName
       });
@@ -906,7 +926,7 @@ Formulate 3-4 innovative, realistic, and legally sound operative proposals (200-
 
     if (feature === 'speech') {
       const { speechType, country, committee, topic, tone, timeLimitSeconds, keyPoints } = payload;
-      const guideInfo = getStudyGuideInjection(user.id, committee);
+      const guideInfo = await getStudyGuideInjection(user.id, committee);
       const targetWords = Math.round((timeLimitSeconds / 60) * 130);
       const minWords = Math.max(50, targetWords - 15);
       const maxWords = targetWords + 20;
@@ -967,9 +987,10 @@ ${languagePrompt}`;
       const userPrompt = `Deliver speech for ${country} in ${committee} on "${topic}".\nSpeech Type: ${speechType}\nTime Limit: ${timeLimitSeconds}s (${targetWords} words target).\nLanguage: ${payload.language || 'English'}\nKey Focus: ${keyPoints || 'Defend national priorities and urge collective action.'}`;
       const fullSystemPrompt = `${systemPrompt}${guideInfo.prompt}`;
       result = await callDeepSeekOrFallback(fullSystemPrompt, userPrompt, { temperature: 0.7, max_tokens: 1500 });
+      const freshUser = await db.getUser(user.id);
       return res.json({
         result,
-        user: db.getUser(user.id),
+        user: freshUser || user,
         targetWords,
         guideApplied: Boolean(guideInfo.guide),
         guideName: guideInfo.guide?.committeeName
@@ -978,7 +999,7 @@ ${languagePrompt}`;
 
     if (feature === 'clauses') {
       const { committee, topic, country } = payload;
-      const guideInfo = getStudyGuideInjection(user.id, committee);
+      const guideInfo = await getStudyGuideInjection(user.id, committee);
       const systemPrompt = `You are a Senior Legal Officer in the UN Codification Division and an expert Model UN Resolution Drafter.
 Generate 6 substantial, authentic draft resolution clauses (3 Preambulatory and 3 Operative) for ${country || 'a member state'} in ${committee} on the topic: "${topic}".
 
@@ -1007,11 +1028,12 @@ Output strictly valid JSON matching this schema:
       const userPrompt = `Topic: ${topic}. Committee: ${committee}. Country/Delegation: ${country || 'Representative'}. Language: ${payload.language || 'English'}. Provide 3 Preambulatory and 3 Operative clauses.`;
       const fullSystemPrompt = `${systemPrompt}${guideInfo.prompt}`;
       const raw = await callDeepSeekOrFallback(fullSystemPrompt, userPrompt, { jsonMode: true, temperature: 0.6 });
+      const freshUser = await db.getUser(user.id);
       try {
         const parsed = JSON.parse(raw);
         return res.json({
           result: parsed,
-          user: db.getUser(user.id),
+          user: freshUser || user,
           guideApplied: Boolean(guideInfo.guide),
           guideName: guideInfo.guide?.committeeName
         });
@@ -1019,7 +1041,7 @@ Output strictly valid JSON matching this schema:
         return res.json({
           result: { clauses: [] },
           rawText: raw,
-          user: db.getUser(user.id),
+          user: freshUser || user,
           guideApplied: Boolean(guideInfo.guide),
           guideName: guideInfo.guide?.committeeName
         });
@@ -1037,7 +1059,8 @@ Keep answers direct, practical, and provide the exact phrasing a delegate should
 
       const lastMsg = messages[messages.length - 1]?.content || 'Explain rules of procedure.';
       result = await callDeepSeekOrFallback(systemPrompt, lastMsg);
-      return res.json({ result, user: db.getUser(user.id) });
+      const freshUser = await db.getUser(user.id);
+      return res.json({ result, user: freshUser || user });
     }
 
     if (feature === 'country-research') {
@@ -1058,11 +1081,12 @@ Output strictly valid JSON matching this schema with content in the designated l
 }`;
       const userPrompt = `Country: ${country}. Agenda topic: ${topic}. Language: ${payload.language || 'English'}.`;
       const raw = await callDeepSeekOrFallback(systemPrompt, userPrompt, { jsonMode: true });
+      const freshUser = await db.getUser(user.id);
       try {
         const parsed = JSON.parse(raw);
-        return res.json({ result: parsed, user: db.getUser(user.id) });
+        return res.json({ result: parsed, user: freshUser || user });
       } catch {
-        return res.json({ rawText: raw, user: db.getUser(user.id) });
+        return res.json({ rawText: raw, user: freshUser || user });
       }
     }
 
@@ -1088,18 +1112,19 @@ Output strictly valid JSON with narrative and analysis in the designated languag
 }`;
       const userPrompt = `Classification: ${note.classification}\nRecipient: ${note.recipient}\nObjective: ${note.objective}\nAction Details: ${note.actionDetails}\nResources: ${note.resourcesNeeded}\nLanguage: ${payload.language || 'English'}`;
       const raw = await callDeepSeekOrFallback(systemPrompt, userPrompt, { jsonMode: true });
+      const freshUser = await db.getUser(user.id);
       try {
         const parsed = JSON.parse(raw);
-        return res.json({ result: parsed, user: db.getUser(user.id) });
+        return res.json({ result: parsed, user: freshUser || user });
       } catch {
-        return res.json({ rawText: raw, user: db.getUser(user.id) });
+        return res.json({ rawText: raw, user: freshUser || user });
       }
     }
 
     if (feature === 'debate-turn' || feature === 'debate-spar') {
       const { country, userCountry, opponentCountry, committee, topic, dialogueHistory, history, userArgument, lastSpeech } = payload;
       const comm = committee || payload.committeeId || '';
-      const guideInfo = getStudyGuideInjection(user.id, comm);
+      const guideInfo = await getStudyGuideInjection(user.id, comm);
       const myCountry = userCountry || country || 'Delegate';
       const oppCountry = opponentCountry || 'Opposing Delegation';
       const hist = history || dialogueHistory || [];
@@ -1124,6 +1149,7 @@ Output strictly valid JSON:
       const userPrompt = `Previous debate dialogue:\n${JSON.stringify(hist.slice(-4))}\n\nDelegate of ${myCountry} argued:\n"${userText}"\nLanguage: ${payload.language || 'English'}`;
       const fullSystemPrompt = `${systemPrompt}${guideInfo.prompt}`;
       const raw = await callDeepSeekOrFallback(fullSystemPrompt, userPrompt, { jsonMode: true });
+      const freshUser = await db.getUser(user.id);
       try {
         const parsed = JSON.parse(raw);
         if (!parsed.reply && parsed.rebuttalSpeech) parsed.reply = parsed.rebuttalSpeech;
@@ -1133,7 +1159,7 @@ Output strictly valid JSON:
         }
         return res.json({
           result: parsed,
-          user: db.getUser(user.id),
+          user: freshUser || user,
           guideApplied: Boolean(guideInfo.guide),
           guideName: guideInfo.guide?.committeeName
         });
@@ -1144,7 +1170,7 @@ Output strictly valid JSON:
             critique: "Well-structured intervention. Ensure you cite specific charter articles to strengthen defensive arguments.",
             scores: { persuasiveness: 8, decorum: 9, policyAdherence: 8 }
           },
-          user: db.getUser(user.id),
+          user: freshUser || user,
           guideApplied: Boolean(guideInfo.guide),
           guideName: guideInfo.guide?.committeeName
         });

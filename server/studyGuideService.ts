@@ -1,6 +1,6 @@
 import { createRequire } from 'module';
-import { callDeepSeekOrFallback } from './aiService.ts';
-import type { StudyGuideSummary } from '../src/types/index.ts';
+import { callDeepSeekOrFallback } from './aiService.js';
+import type { StudyGuideSummary } from '../src/types/index.js';
 
 const require = createRequire(import.meta.url);
 
